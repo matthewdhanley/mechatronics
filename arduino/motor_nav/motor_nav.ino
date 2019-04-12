@@ -27,11 +27,13 @@ Developed with ROB-9457
 // the default pins listed are the ones used on the Redbot (ROB-12097) with
 // the exception of STBY which the Redbot controls with a physical switch
 #define AIN1 9
-#define BIN1 7
 #define AIN2 10
-#define BIN2 6
 #define PWMA 11
+
 #define PWMB 5
+#define BIN1 7
+#define BIN2 6
+
 #define STBY 8
 
 #define LIN_SERVO = 2
@@ -39,7 +41,7 @@ Developed with ROB-9457
 
 // The absolute maximum this value can be is 250. 100 is a speed it won't
 // get away from us.
-const int max_speed = 100.0;
+const int max_speed = -100.0;
 
 // Variable Initialization -- Line Follower
 const int offsetA    = 1;
@@ -115,7 +117,7 @@ void read_tape_sensors(){
   tape_sensors.right = (float)proximityADC2 * 5.0 / 1023.0;    
 
   tape_sensors_prev.left = tape_sensors.left;
-  tape_sensors_prev.right = tape_sensors.right;
+  tape_sensors_prev.right = tape_sensors.right; // Twisty Wire
 }
 
 
@@ -159,8 +161,8 @@ void get_command_motor()
 void drive_motor()
 {
 
-  motor1.drive(100);
-  motor2.drive(100);
+  motor1.drive(cur_motor_cmd1.motor_speed);
+  motor2.drive(cur_motor_cmd2.motor_speed);
 
 }
 void loop()
@@ -168,20 +170,25 @@ void loop()
 //   read_tape_sensors(); // loads tape sensor values to proximity V1 and proximity V2
 //   if (tape_sensors.left > v_thresh && tape_sensors.right > v_thresh){
 //    go_straight();
+//    Serial.println("straight");
 //   }
 //   else if (tape_sensors.left <= v_thresh && tape_sensors.right > v_thresh){
 //    turn_left();
+//    Serial.println("left");
 //   }
 //   else if (tape_sensors.left > v_thresh && tape_sensors.right <= v_thresh){
 //    turn_right();
+//    Serial.println("right");
 //   }
 //   else{
 //    stop_motors();
 //   }
 
-//   get_command_motor();
-   drive_motor();
+  get_command_motor();
+  drive_motor();
+//  motor1.drive(max/_speed);
+//  motor2.drive(max_speed);
       
-   delay(100);
+  delay(100);
    
 }

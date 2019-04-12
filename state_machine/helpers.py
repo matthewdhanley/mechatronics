@@ -16,12 +16,12 @@ def get_camera():
     it will start a video stream using the default camera.
     :return: VideoStream object.
     """
-    try:
+    # try:
         # this will only run if it's on the pi
-        vs = VideoStream(usePiCamera=True).start()
-    except ModuleNotFoundError:
+    vs = VideoStream(usePiCamera=True).start()
+    # except:
         # if it's not running on the pi
-        vs = VideoStream(src=0).start()
+        # vs = VideoStream(src=0).start()
     time.sleep(2.0)
     return vs
 
@@ -41,8 +41,12 @@ def read_qr(vs, show_video=False):
     output_dicts = []
     for barcode in barcodes:
         output_dict = {}
-        (x, y, w, h) = barcode.rect
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+        (frame_x, frame_y, w, h) = barcode.rect
+        cv2.rectangle(frame, (frame_x, frame_y), (frame_x + w, frame_y + h), (0, 0, 255), 2)
+
+        # Locates corner for QR code:
+        # we can use this to center robot on pallet
+        cv2.rectangle(frame, (frame_x, frame_y), (frame_x + 2, frame_y + 2), (255, 0, 0), 2)
         barcode_data = barcode.data.decode("utf-8").replace(' ', '')
         barcode_type = barcode.type
         text = "{} ({})".format(barcode_data, barcode_type)
@@ -70,6 +74,7 @@ def read_qr(vs, show_video=False):
 
         if output_dict:
             output_dict['time'] = time.time()
+            output_dict['frame_location'] = [(frame_x + w)/2, frame_y]
             output_dicts.append(output_dict)
 
     if show_video:
@@ -77,3 +82,49 @@ def read_qr(vs, show_video=False):
         cv2.waitKey(5)
 
     return output_dicts
+
+def set_motor_speed(serial_port, id, speed):
+
+    
+    # print("writing motor id: %d" %(id)) 
+    motor_id_str = bytes([int(id)])
+    serial_port.write(motor_id_str)
+    
+    read_ser=serial_port.readline()
+    # print("reading id:" + read_ser)
+    
+    # print("writing motor speed: %d" %speed)
+    motor_speed_str = bytes([int(speed)])
+    serial_port.write(motor_speed_str)
+
+    read_ser=serial_port.readline()
+    # print("reading speed:" + read_ser)
+
+    # print("------------")
+    return
+
+def nudge_right(serial_port):
+
+    # move forward
+    set_motor_speed(serial_port, 1, 100)
+    set_motor_speed(serial_port, 2, 100)
+    time.sleep(.05)
+
+    # stop motors
+    set_motor_speed(serial_port, 1, 0)
+    set_motor_speed(serial_port, 2, 0)
+
+    return
+
+def nudge_left(serial_port):
+
+    # move backwards
+    set_motor_speed(serial_port, 1, -100)
+    set_motor_speed(serial_port, 2, -100)
+    time.sleep(.05)
+
+    # stop motors
+    set_motor_speed(serial_port, 1, 0)
+    set_motor_speed(serial_port, 2, 0)
+
+    return    

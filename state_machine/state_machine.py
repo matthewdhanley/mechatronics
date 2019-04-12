@@ -9,7 +9,10 @@ from transitions import Machine
 import time
 import logging
 import cv2
-from state_machine import helpers
+# from state_machine import helpers
+import helpers
+# import state_machine.helpers
+import serial
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('transitions').setLevel(logging.INFO)
@@ -21,7 +24,7 @@ def robot_sm():
     :return: state machine object
     """
     # Different states the robot can be in. Add whatever we need -------------------------------------------------------
-    states = ['startup', 'determine_target', 'safe', 'navigation']
+    states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet']
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
     robot = RobotActions()
@@ -37,6 +40,9 @@ def robot_sm():
     machine.add_transition('goto_safe', source='*', dest='safe')
     machine.add_transition('drive_to_pallet', source='*', dest='navigation')
     machine.add_transition('drive_to_dropoff', source='*', dest='navigation')
+    machine.add_transition('pickup', source='*', dest='pickup_pallet')
+    machine.add_transition('align', source='*', dest='align_pallet')
+
 
     return robot
 
@@ -63,6 +69,13 @@ class RobotActions(object):
         self.goal_qr = {}  # to store the goal QR code
         self.navigation_goal = {'x': None, 'y': None}  # where we want the robot to drive to
         self.current_location = {'x': 0, 'y': 0}  # where we currently are. Assuming we start at 0,0
+
+        # Set up serial interface with Arduino
+        self.serial_nav = serial.Serial("/dev/ttyUSB1",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+        self.serial_nav.baudrate =9600
+
+        self.serial_grip = serial.Serial("/dev/ttyUSB0",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+        self.serial_grip.baudrate =9600
 
     def __del__(self):
         """
@@ -107,12 +120,14 @@ class RobotActions(object):
         begin_time = int(time.time())  # time the loop started
         while 1:
             qr_codes = helpers.read_qr(self.vs, show_video=True)
+
             if qr_codes is not None and len(qr_codes) == 1:
                 # If we see one QR Code, store it somehow
                 self.goal_qr = qr_codes[0]
                 self.navigation_goal = self.goal_qr['location']
                 cv2.destroyAllWindows()
-                self.queued_trigger = self.drive_to_pallet()
+                # self.queued_trigger = self.drive_to_pallet()
+                self.queued_trigger = self.align()
                 return
 
             # Check for Timeout
@@ -129,6 +144,72 @@ class RobotActions(object):
         while 1:
             # Figure out how we get to the goal here
             pass
+
+    def on_enter_align_pallet(self):
+        """
+        align robot with pallet
+        command gripper to pick it up
+        """
+        print "Aligning Robot"
+
+        # # x val neeeded to be centered
+        x_center = 103; 
+        while 1:
+            qr_codes = helpers.read_qr(self.vs, show_video=True)
+
+            if qr_codes is not None and len(qr_codes) == 1:
+                print qr_codes[0]['frame_location'][0]
+                x_error  = qr_codes[0]['frame_location'][0] - x_center;
+                print x_error
+
+                if x_error > 3:
+                    print "nudge right"
+                    helpers.nudge_right(self.serial_nav)
+
+                if x_error < -3:
+                    print "nudge left"
+                    helpers.nudge_left(self.serial_nav)
+                
+                if abs(x_error) <=2:
+                    print "Centered"
+                    self.queued_trigger = self.pickup()
+
+                time.sleep(2)
+
+
+    def on_enter_pickup_pallet(self):
+        """
+        align robot with pallet
+        command gripper to pick it up
+        """
+        print "Picking Up Pallet"
+
+        # horizontal actuator
+        # +100 = forward
+        time.sleep(5)
+        print "Forward"
+        helpers.set_motor_speed(self.serial_grip, 3, 450)
+
+
+        time.sleep(60)
+
+        # time.sleep(5)
+        # # veritcal actuator
+        # # +100 = upwards
+        # print "Up"
+        # helpers.set_motor_speed(self.serial_grip, 4, 8000)
+        # time.sleep(15)
+
+        # print "Back"
+        # helpers.set_motor_speed(self.serial_grip, 3, -450)
+        # time.sleep(5)
+
+        # print "Down"
+        # helpers.set_motor_speed(self.serial_grip, 4, -8000)
+        # time.sleep(15)
+
+        # horizontal actuator
+        # -100 = backwards
 
     def on_enter_safe(self):
         """
