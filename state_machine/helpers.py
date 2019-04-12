@@ -9,7 +9,7 @@ from pyzbar import pyzbar
 from imutils.video import VideoStream
 import time
 import re
-
+import matplotlib.pyplot as plt
 
 with np.load('state_machine/camera_cal_output.npz') as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
@@ -21,14 +21,33 @@ def get_camera():
     it will start a video stream using the default camera.
     :return: VideoStream object.
     """
-    try:
+    # try:
         # this will only run if it's on the pi
-        vs = VideoStream(usePiCamera=True).start()
-    except ModuleNotFoundError:
+    vs = VideoStream(usePiCamera=True).start()
+    # except:
         # if it's not running on the pi
-        vs = VideoStream(src=0).start()
+        # vs = VideoStream(src=0).start()
     time.sleep(2.0)
     return vs
+
+
+def extracct_barcode_data(data):
+    output_dict = {}
+    location_data = re.match('.*Loc:(?P<x>\d+),(?P<y>\d+).*', data)
+    if location_data:
+        output_dict['location'] = {}
+        output_dict['location']['x'] = int(location_data.group('x'))
+        output_dict['location']['y'] = int(location_data.group('y'))
+
+    # Parse pallet rack data
+    pallet_rack_data = re.match('.*PRacks:?([\d+,]+).*', data)
+    if pallet_rack_data:
+        output_dict['pallet_racks'] = [int(x) for x in pallet_rack_data.groups()[0].split(',')]
+
+    pallets_data = re.match('.*Pallets:([\d+,]+).*', data)
+    if pallets_data:
+        output_dict['pallets'] = [int(x) for x in pallets_data.groups()[0].split(',')]
+    return output_dict
 
 
 def read_qr(vs, show_video=False):
@@ -46,9 +65,10 @@ def read_qr(vs, show_video=False):
 
         output_dicts = []
         for barcode in barcodes:
-            output_dict = {}
+            # set up dictionary for the barcodes
+            # Get coordinates for the bounding box of the barcode
             (x, y, w, h) = barcode.rect
-            print("x: {}, y: {}, w: {}, h: {}".format(x,y,w,h))
+            print("Bounding Box Coordinates:\n\tx: {}, y: {}, w: {}, h: {}".format(x, y, w, h))
             # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
             # cv2.arrowedLine(frame, a, b, (0, 0, 255), 3)  # x axis
             # cv2.line(frame, b, c, (0, 255, 0))
@@ -57,9 +77,7 @@ def read_qr(vs, show_video=False):
             # x_unit = np.linalg.norm([b.x - a.x, b.y - a.y, 0])
             # y_unit = np.linalg.norm([d.x - a.x, d.y - a.y, 0])
             # z = np.cross(x_unit,y_unit)
-            img = determine_pose(frame, barcode)
-            cv2.imshow("pose", img)
-            cv2.waitKey(5)
+
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
             # cv2.circle(frame, a, 5, (255, 0, 0), -1)
             # cv2.circle(frame, d, 5, (255, 0, 0), -1)
@@ -70,33 +88,24 @@ def read_qr(vs, show_video=False):
 
             print("[INFO] found {} barcode: {}".format(barcode_type, barcode_data))
 
-            # This might be formatted differently later?? - Lubna
+            # Parse barcode location data
+            output_dict = extracct_barcode_data(barcode_data)
 
-            # Parse x,y location data
-            location_data = re.match('.*Loc:(?P<x>\d+),(?P<y>\d+).*', barcode_data)
-            if location_data:
-                output_dict['location'] = {}
-                output_dict['location']['x'] = int(location_data.group('x'))
-                output_dict['location']['y'] = int(location_data.group('y'))
-
-            # Parse pallet rack data
-            pallet_rack_data = re.match('.*PRacks:?([\d+,]+).*', barcode_data)
-            if pallet_rack_data:
-                output_dict['pallet_racks'] = [int(x) for x in pallet_rack_data.groups()[0].split(',')]
-
-            pallets_data = re.match('.*Pallets:([\d+,]+).*', barcode_data)
-            if pallets_data:
-                output_dict['pallets'] = [int(x) for x in pallets_data.groups()[0].split(',')]
+            # Get the pose of the barcode
+            img = determine_pose(frame, barcode)
+            cv2.imshow("pose", img)
+            cv2.waitKey(5)
 
             if output_dict:
                 output_dict['time'] = time.time()
+                output_dict['frame_location'] = [(frame_x + w)/2, frame_y]
                 output_dicts.append(output_dict)
 
-    if show_video:
-        cv2.imshow("Barcode Scanner", frame)
-        cv2.waitKey(5)
+            if show_video:
+                cv2.imshow("Barcode Scanner", frame)
+                cv2.waitKey(5)
 
-    return output_dicts
+        return output_dicts
 
 
 def determine_pose(image, barcode):
@@ -144,3 +153,50 @@ def draw(img, corners, imgpts):
     cv2.line(img, corner, tuple(imgpts[1].ravel()), (0, 255, 0), 5)
     cv2.line(img, corner, tuple(imgpts[2].ravel()), (0, 0, 255), 5)
     return img
+
+
+def set_motor_speed(serial_port, id, speed):
+
+
+    # print("writing motor id: %d" %(id)) 
+    motor_id_str = bytes([int(id)])
+    serial_port.write(motor_id_str)
+    
+    read_ser=serial_port.readline()
+    # print("reading id:" + read_ser)
+    
+    # print("writing motor speed: %d" %speed)
+    motor_speed_str = bytes([int(speed)])
+    serial_port.write(motor_speed_str)
+
+    read_ser=serial_port.readline()
+    # print("reading speed:" + read_ser)
+
+    # print("------------")
+    return
+
+def nudge_right(serial_port):
+
+    # move forward
+    set_motor_speed(serial_port, 1, 100)
+    set_motor_speed(serial_port, 2, 100)
+    time.sleep(.05)
+
+    # stop motors
+    set_motor_speed(serial_port, 1, 0)
+    set_motor_speed(serial_port, 2, 0)
+
+    return
+
+def nudge_left(serial_port):
+
+    # move backwards
+    set_motor_speed(serial_port, 1, -100)
+    set_motor_speed(serial_port, 2, -100)
+    time.sleep(.05)
+
+    # stop motors
+    set_motor_speed(serial_port, 1, 0)
+    set_motor_speed(serial_port, 2, 0)
+
+    return    
