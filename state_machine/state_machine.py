@@ -24,7 +24,7 @@ def robot_sm():
     :return: state machine object
     """
     # Different states the robot can be in. Add whatever we need -------------------------------------------------------
-    states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet']
+    states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet_horizontal', 'align_pallet_vertical', 'pickup_pallet']
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
     robot = RobotActions()
@@ -41,7 +41,8 @@ def robot_sm():
     machine.add_transition('drive_to_pallet', source='*', dest='navigation')
     machine.add_transition('drive_to_dropoff', source='*', dest='navigation')
     machine.add_transition('pickup', source='*', dest='pickup_pallet')
-    machine.add_transition('align', source='*', dest='align_pallet')
+    machine.add_transition('align_vertical', source='*', dest='align_pallet_vertical')
+    machine.add_transition('align_horizontal', source='*', dest='align_pallet_horizontal')
 
 
     return robot
@@ -71,10 +72,11 @@ class RobotActions(object):
         self.current_location = {'x': 0, 'y': 0}  # where we currently are. Assuming we start at 0,0
 
         # Set up serial interface with Arduino
-        self.serial_nav = serial.Serial("/dev/ttyUSB1",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+        # Always plug in Nav arduino First!
+        self.serial_nav = serial.Serial("/dev/ttyUSB0",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
         self.serial_nav.baudrate =9600
 
-        self.serial_grip = serial.Serial("/dev/ttyUSB0",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+        self.serial_grip = serial.Serial("/dev/ttyUSB1",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
         self.serial_grip.baudrate =9600
 
     def __del__(self):
@@ -127,7 +129,7 @@ class RobotActions(object):
                 self.navigation_goal = self.goal_qr['location']
                 cv2.destroyAllWindows()
                 # self.queued_trigger = self.drive_to_pallet()
-                self.queued_trigger = self.align()
+                self.queued_trigger = self.align_vertical()
                 return
 
             # Check for Timeout
@@ -145,33 +147,57 @@ class RobotActions(object):
             # Figure out how we get to the goal here
             pass
 
-    def on_enter_align_pallet(self):
+    def on_enter_align_pallet_vertical(self):
         """
-        align robot with pallet
-        command gripper to pick it up
+        This function aligns the gripper with the goal pallet row
+        it assumes to the robot is already at the row 2 position
+        After vertically aligning, it will horizontally align with the pallet
         """
-        print "Aligning Robot"
+        print "Aligning Robot Vertically"
 
-        # # x val neeeded to be centered
-        x_center = 103; 
+        if self.goal_qr[0]['palletrow'] == 2:
+            self.queued_trigger = self.align_horizontal();
+        if self.goal_qr[0]['palletrow'] == 3:
+            rise_one_row(self.serial_grip):
+            self.queued_trigger = self.align_horizontal();
+
+
+    def on_enter_align_pallet_horizontal(self):
+        """
+        This function aligns the gripper with the center of the QR code
+        It commands the forward and backwards on the robot to nudge it left/right
+        There is an allowable/adjustable pixel error margin
+        Once centered, the robot will move to the picking up pallet state
+        """
+        print "Aligning Robot Horizontally"
+
+        # These will probz need tweaking
+        x_center_goal       = 103
+        pixel_error_margin  = 3
+
+
         while 1:
             qr_codes = helpers.read_qr(self.vs, show_video=True)
 
             if qr_codes is not None and len(qr_codes) == 1:
+                print "Current QR Center:"
                 print qr_codes[0]['frame_location'][0]
-                x_error  = qr_codes[0]['frame_location'][0] - x_center;
+                
+                x_error  = qr_codes[0]['frame_location'][0] - x_center_goal;
+                
+                print "Current Error:"
                 print x_error
 
-                if x_error > 3:
+                if x_error > pixel_error_margin:
                     print "nudge right"
                     helpers.nudge_right(self.serial_nav)
 
-                if x_error < -3:
+                if x_error < -pixel_error_margin:
                     print "nudge left"
                     helpers.nudge_left(self.serial_nav)
                 
-                if abs(x_error) <=2:
-                    print "Centered"
+                if abs(x_error) <=pixel_error_margin:
+                    print "Centered!!!"
                     self.queued_trigger = self.pickup()
 
                 time.sleep(2)
@@ -210,6 +236,13 @@ class RobotActions(object):
 
         # horizontal actuator
         # -100 = backwards
+
+        # Return to initial vertical position:
+        print "Returning to initial gripper position"
+        if self.goal_qr[0]['palletrow'] == 2:
+            # stay here!
+        if self.goal_qr[0]['palletrow'] == 3:
+            lower_one_row(self.serial_grip):
 
     def on_enter_safe(self):
         """

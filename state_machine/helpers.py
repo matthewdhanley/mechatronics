@@ -85,7 +85,11 @@ def read_qr(vs, show_video=False):
 
 def set_motor_speed(serial_port, id, speed):
 
-    
+    # Motor 1: Left
+    # Motor 2: Right
+    # Motor 3: Horizontal
+    # Motor 4: Vertical
+
     # print("writing motor id: %d" %(id)) 
     motor_id_str = bytes([int(id)])
     serial_port.write(motor_id_str)
@@ -104,10 +108,11 @@ def set_motor_speed(serial_port, id, speed):
     return
 
 def nudge_right(serial_port):
+    # Used for aligning robot with QR code
 
     # move forward
-    set_motor_speed(serial_port, 1, 100)
-    set_motor_speed(serial_port, 2, 100)
+    set_motor_speed(serial_port, 1, 50)
+    set_motor_speed(serial_port, 2, 50)
     time.sleep(.05)
 
     # stop motors
@@ -117,14 +122,24 @@ def nudge_right(serial_port):
     return
 
 def nudge_left(serial_port):
+    # Used for aligning robot with QR code
 
     # move backwards
-    set_motor_speed(serial_port, 1, -100)
-    set_motor_speed(serial_port, 2, -100)
+    set_motor_speed(serial_port, 1, -50)
+    set_motor_speed(serial_port, 2, -50)
     time.sleep(.05)
 
     # stop motors
     set_motor_speed(serial_port, 1, 0)
     set_motor_speed(serial_port, 2, 0)
 
-    return    
+    return  
+
+def lower_one_row(serial_port):
+    row_steps = 100
+    set_motor_speed(serial_port, 4, -row_steps)
+    return
+
+def rise_one_row(serial_port):
+    set_motor_speed(serial_port, 4, row_steps)
+    return
