@@ -2,7 +2,7 @@
 Implementing a state machine from the transitions python package
 Documentation is available here: https://github.com/pytransitions/transitions
 
-Basically what I'm doing here is setting up a state machine. Functions referenced with helpers.somename() are in the
+Basically what I'm doing here is setting up a state machine. Functions referenced with helpers.some_name() are in the
 helpers.py file in this directory.
 """
 from transitions import Machine
@@ -10,6 +10,7 @@ import time
 import logging
 import cv2
 from state_machine import helpers
+import numpy as np
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('transitions').setLevel(logging.INFO)
@@ -21,7 +22,7 @@ def robot_sm():
     :return: state machine object
     """
     # Different states the robot can be in. Add whatever we need -------------------------------------------------------
-    states = ['startup', 'determine_target', 'safe', 'navigation']
+    states = ['startup', 'determine_target', 'safe', 'navigation', 'extract_pallet', 'drop_pallet']
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
     robot = RobotActions()
@@ -37,6 +38,8 @@ def robot_sm():
     machine.add_transition('goto_safe', source='*', dest='safe')
     machine.add_transition('drive_to_pallet', source='*', dest='navigation')
     machine.add_transition('drive_to_dropoff', source='*', dest='navigation')
+    machine.add_transition('drop_off_pallet', source='*', dest='drop_pallet')
+    machine.add_transition('extract_pallet', source='*', dest='extract_pallet')
 
     return robot
 
@@ -101,7 +104,7 @@ class RobotActions(object):
                return to initiate transition to navigation state
             3. Check if time has exceeded the timeout value (set in constructor). If it has, set the queued_trigger to safe
                and return to initiate the transition to that state.
-        :return: Nothing. Returning initiates trigger self.queued_trigger
+        :return: Nothing. Returning initiates self.queued_trigger
         """
         print("Waiting for Initial QR Code.")
         begin_time = int(time.time())  # time the loop started
@@ -128,6 +131,8 @@ class RobotActions(object):
         print("Driving to goal x: {}, y: {}".format(self.navigation_goal['x'], self.navigation_goal['y']))
         while 1:
             # Figure out how we get to the goal here
+            # TODO we will also need a way to differentiate whether we are driving to pick up or drop off. Likely just
+            # another class variable.
             pass
 
     def on_enter_safe(self):
@@ -139,4 +144,18 @@ class RobotActions(object):
         print(self.state)
         # Do whatever we need to do to make the robot stop here.
         raise TimeoutError("The timeout limit was reached and the robot has been safed.")
+
+    def on_enter_extract_pallet(self):
+        """
+        TODO
+        :return:
+        """
+        raise NotImplementedError
+
+    def on_enter_drop_pallet(self):
+        """
+        TODO
+        :return:
+        """
+        raise NotImplementedError
 
