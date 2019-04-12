@@ -9,15 +9,11 @@ from transitions import Machine
 import time
 import logging
 import cv2
-<<<<<<< HEAD
 from state_machine import helpers
 import numpy as np
-=======
 # from state_machine import helpers
-import helpers
 # import state_machine.helpers
 import serial
->>>>>>> ce5f607b3df907ba4f6caa6b1aa594d890c0e1df
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('transitions').setLevel(logging.INFO)
@@ -29,11 +25,7 @@ def robot_sm():
     :return: state machine object
     """
     # Different states the robot can be in. Add whatever we need -------------------------------------------------------
-<<<<<<< HEAD
-    states = ['startup', 'determine_target', 'safe', 'navigation', 'extract_pallet', 'drop_pallet']
-=======
     states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet']
->>>>>>> ce5f607b3df907ba4f6caa6b1aa594d890c0e1df
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
     robot = RobotActions()
@@ -49,14 +41,8 @@ def robot_sm():
     machine.add_transition('goto_safe', source='*', dest='safe')
     machine.add_transition('drive_to_pallet', source='*', dest='navigation')
     machine.add_transition('drive_to_dropoff', source='*', dest='navigation')
-<<<<<<< HEAD
-    machine.add_transition('drop_off_pallet', source='*', dest='drop_pallet')
-    machine.add_transition('extract_pallet', source='*', dest='extract_pallet')
-=======
     machine.add_transition('pickup', source='*', dest='pickup_pallet')
     machine.add_transition('align', source='*', dest='align_pallet')
-
->>>>>>> ce5f607b3df907ba4f6caa6b1aa594d890c0e1df
 
     return robot
 
@@ -166,7 +152,7 @@ class RobotActions(object):
         align robot with pallet
         command gripper to pick it up
         """
-        print "Aligning Robot"
+        print("Aligning Robot")
 
         # # x val neeeded to be centered
         x_center = 103; 
@@ -174,20 +160,20 @@ class RobotActions(object):
             qr_codes = helpers.read_qr(self.vs, show_video=True)
 
             if qr_codes is not None and len(qr_codes) == 1:
-                print qr_codes[0]['frame_location'][0]
+                print(qr_codes[0]['frame_location'][0])
                 x_error  = qr_codes[0]['frame_location'][0] - x_center;
-                print x_error
+                print(x_error)
 
                 if x_error > 3:
-                    print "nudge right"
+                    print("nudge right")
                     helpers.nudge_right(self.serial_nav)
 
                 if x_error < -3:
-                    print "nudge left"
+                    print("nudge left")
                     helpers.nudge_left(self.serial_nav)
                 
                 if abs(x_error) <=2:
-                    print "Centered"
+                    print("Centered")
                     self.queued_trigger = self.pickup()
 
                 time.sleep(2)
@@ -198,12 +184,12 @@ class RobotActions(object):
         align robot with pallet
         command gripper to pick it up
         """
-        print "Picking Up Pallet"
+        print("Picking Up Pallet")
 
         # horizontal actuator
         # +100 = forward
         time.sleep(5)
-        print "Forward"
+        print("Forward")
         helpers.set_motor_speed(self.serial_grip, 3, 450)
 
 
@@ -212,15 +198,15 @@ class RobotActions(object):
         # time.sleep(5)
         # # veritcal actuator
         # # +100 = upwards
-        # print "Up"
+        # print("Up")
         # helpers.set_motor_speed(self.serial_grip, 4, 8000)
         # time.sleep(15)
 
-        # print "Back"
+        # print("Back")
         # helpers.set_motor_speed(self.serial_grip, 3, -450)
         # time.sleep(5)
 
-        # print "Down"
+        # print("Down")
         # helpers.set_motor_speed(self.serial_grip, 4, -8000)
         # time.sleep(15)
 

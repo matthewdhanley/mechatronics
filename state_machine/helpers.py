@@ -10,8 +10,9 @@ from imutils.video import VideoStream
 import time
 import re
 import matplotlib.pyplot as plt
+import os
 
-with np.load('state_machine/camera_cal_output.npz') as X:
+with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
 
@@ -21,12 +22,13 @@ def get_camera():
     it will start a video stream using the default camera.
     :return: VideoStream object.
     """
-    # try:
+    try:
         # this will only run if it's on the pi
-    vs = VideoStream(usePiCamera=True).start()
-    # except:
+        vs = VideoStream(usePiCamera=True).start()
+
+    except:
         # if it's not running on the pi
-        # vs = VideoStream(src=0).start()
+        vs = VideoStream(src=0).start()
     time.sleep(2.0)
     return vs
 
@@ -47,6 +49,8 @@ def extracct_barcode_data(data):
     pallets_data = re.match('.*Pallets:([\d+,]+).*', data)
     if pallets_data:
         output_dict['pallets'] = [int(x) for x in pallets_data.groups()[0].split(',')]
+
+    output_dict['time'] = time.time()
     return output_dict
 
 
@@ -57,6 +61,9 @@ def read_qr(vs, show_video=False):
     :param show_video: set to True to have a live stream pop up.
     :return: Array of QR code dictionaries.
     """
+
+    # plt.show()
+
     while 1:
         frame = vs.read()
         # frame = imutils.resize(frame, width=800)
@@ -64,11 +71,12 @@ def read_qr(vs, show_video=False):
         barcodes = pyzbar.decode(frame)
 
         output_dicts = []
+        observer_info = {}
         for barcode in barcodes:
             # set up dictionary for the barcodes
             # Get coordinates for the bounding box of the barcode
             (x, y, w, h) = barcode.rect
-            print("Bounding Box Coordinates:\n\tx: {}, y: {}, w: {}, h: {}".format(x, y, w, h))
+            # print("Bounding Box Coordinates:\n\tx: {}, y: {}, w: {}, h: {}".format(x, y, w, h))
             # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
             # cv2.arrowedLine(frame, a, b, (0, 0, 255), 3)  # x axis
             # cv2.line(frame, b, c, (0, 255, 0))
@@ -79,36 +87,38 @@ def read_qr(vs, show_video=False):
             # z = np.cross(x_unit,y_unit)
 
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
-            # cv2.circle(frame, a, 5, (255, 0, 0), -1)
-            # cv2.circle(frame, d, 5, (255, 0, 0), -1)
-            # cv2.circle(frame, b, 5, (255, 0, 0), -1)
             barcode_type = barcode.type
-            text = "{} ({})".format(barcode_data, barcode_type)
-            # cv2.putText(image, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-            print("[INFO] found {} barcode: {}".format(barcode_type, barcode_data))
+            # print("[INFO] found {}:\n\tbarcode: {}".format(barcode_type, barcode_data))
 
             # Parse barcode location data
             output_dict = extracct_barcode_data(barcode_data)
 
             # Get the pose of the barcode
-            img = determine_pose(frame, barcode)
+            observer_info, img = determine_pose(frame, barcode, output_dict)
             cv2.imshow("pose", img)
             cv2.waitKey(5)
 
             if output_dict:
-                output_dict['time'] = time.time()
-                output_dict['frame_location'] = [(frame_x + w)/2, frame_y]
+                # output_dict['frame_location'] = [(frame_x + w)/2, frame_y]
                 output_dicts.append(output_dict)
 
-            if show_video:
-                cv2.imshow("Barcode Scanner", frame)
-                cv2.waitKey(5)
+        # world_fig = plt.figure()
+        # ax = world_fig.add_subplot(1, 1, 1)
+        # for d in output_dicts:
+        #
+        #     ax.scatter(d['location']['x'], d['location']['y'], marker="s")
+        # if observer_info:
+        #     ax.scatter(observer_info['location']['x'], observer_info['location']['y'])
+        # if output_dicts:
+        #     ax.scatter(0,0, marker="x")
+            # plt.show()
+            # plt.pause(1)
+            # plt.close()
+        # return output_dicts
 
-        return output_dicts
 
-
-def determine_pose(image, barcode):
+def determine_pose(image, barcode, barcode_info):
     """
     Procedure to get pose of the qr code:
     1. generate axis
@@ -122,9 +132,11 @@ def determine_pose(image, barcode):
 
     # Convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
     # get the corners of the qr code
-    (lower_left, lower_right, upper_right, upper_left) = barcode.polygon
+    try:
+        (lower_left, lower_right, upper_right, upper_left) = barcode.polygon
+    except ValueError:
+        return
 
     cv2.circle(image, upper_right, 5, (255, 0, 0), -1)
 
@@ -139,12 +151,17 @@ def determine_pose(image, barcode):
     # Solve the transformation between object space and image space.
     ret, rvecs, tvecs = cv2.solvePnP(objp, corners, MTX, DIST)
 
+    observer = {}
+    observer['location'] = {}
+    observer['location']['x'] = barcode_info['location']['x'] + tvecs[2] * 10
+    print("Normal Distance: {}".format(tvecs[2]))
+    observer['location']['y'] = barcode_info['location']['y'] + tvecs[0] * 10
+    print("X translation: {}".format(tvecs[0]+3))
+
     # project the points to the image coordinate frame
     imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, MTX, DIST)
-    print(rvecs)
-    print(tvecs)
     img = draw(image, corners, imgpts)
-    return img
+    return observer, img
 
 
 def draw(img, corners, imgpts):
@@ -200,3 +217,8 @@ def nudge_left(serial_port):
     set_motor_speed(serial_port, 2, 0)
 
     return    
+
+
+if __name__ == "__main__":
+    camera = get_camera()
+    read_qr(camera, show_video=True)
