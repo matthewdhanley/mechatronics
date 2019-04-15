@@ -15,20 +15,24 @@ struct motor_command {
    int motor_speed; // Steps
 };
 
-struct motor_command cur_motor_cmd3;
-struct motor_command cur_motor_cmd4;
+struct motor_command cur_motor_cmd3; // Horizontal
+struct motor_command cur_motor_cmd4; // Vertical
 
 void setup()
 {
   Serial.begin(9600);
+
+  pinMode (ENA, OUTPUT);
+  
   // Horizontal Motor
   pinMode (PUL, OUTPUT);
   pinMode (DIR, OUTPUT);
-  pinMode (ENA, OUTPUT);
 
   // Vertical Motor
   pinMode (PUL2, OUTPUT);
   pinMode (DIR2, OUTPUT);
+
+  // Set initial speed to 0
   cur_motor_cmd3.motor_speed = 0;
   cur_motor_cmd4.motor_speed = 0;
 }
