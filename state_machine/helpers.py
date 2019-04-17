@@ -142,7 +142,7 @@ def read_qr(show_video=False):
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
 
             # Parse barcode location data
-            output_dict = extract_barcode_data(barcode_data)
+            output_dict = extract_floor_barcode_data(barcode_data)
 
             # Get the pose of the barcode
             observer_info, img = determine_pose(frame, barcode, output_dict)
@@ -346,4 +346,5 @@ def build_map():
 
 
 if __name__ == "__main__":
-    build_map()
+    # build_map()
+    read_qr()

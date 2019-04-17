@@ -35,6 +35,9 @@ class Vertex:
     def get_id(self):
         return self.id
 
+    def get_location(self):
+        return self.location
+
     def get_weight(self, neighbor):
         return self.adjacent[neighbor]
 
@@ -103,6 +106,7 @@ def shortest(v, path):
         shortest(v.previous, path)
     return
 
+
 def dijkstra(aGraph, start):
     print('''Dijkstra's shortest path''')
     # Set the distance for the start node to zero
@@ -143,24 +147,89 @@ def dijkstra(aGraph, start):
         heapq.heapify(unvisited_queue)
 
 
+def get_graph():
+    g = Graph()
+    g.add_vertex('qr1',  [14., 22.])
+    g.add_vertex('qr2',  [21., 18.5])
+    g.add_vertex('qr3',  [13.5, 41.5])
+    g.add_vertex('qr4',  [31.5, 42.])
+    g.add_vertex('qr5',  [53.5, 41.5])
+    g.add_vertex('qr6',  [76., 18.])
+    g.add_vertex('qr7',  [76.5, 41.5])
+    g.add_vertex('qr8',  [76.5, 62.])
+    g.add_vertex('qr9',  [80., 81.])
+    g.add_vertex('qr10', [80., 104.5])
+    g.add_vertex('qr11', [54., 104.5])
+    g.add_vertex('qr12', [31.5, 104.5])
+    g.add_vertex('qr13', [14.5, 104.5])
+    g.add_vertex('qr14', [14., 118.5])
+    g.add_vertex('qr15', [21., 127.5])
+    g.add_vertex('qr16', [80., 127.5])
+
+    # g.add_edge('qr1', 'qr2')
+    g.add_edge('qr1', 'qr3')
+    g.add_edge('qr2', 'qr6')
+    g.add_edge('qr6', 'qr7')
+    g.add_edge('qr5', 'qr7')
+    g.add_edge('qr4', 'qr5')
+    g.add_edge('qr3', 'qr4')
+    g.add_edge('qr3', 'qr4')
+    g.add_edge('qr3', 'qr13')
+    g.add_edge('qr13', 'qr14')
+    # g.add_edge('qr14', 'qr15')
+    g.add_edge('qr15', 'qr16')
+    g.add_edge('qr10', 'qr16')
+    g.add_edge('qr10', 'qr11')
+    g.add_edge('qr10', 'qr9')
+    g.add_edge('qr8', 'qr9')
+    g.add_edge('qr8', 'qr7')
+    g.add_edge('qr11', 'qr5')
+    g.add_edge('qr12', 'qr4')
+    g.add_edge('qr12', 'qr13')
+    return g
+
+
 if __name__ == '__main__':
 
     g = Graph()
 
-    g.add_vertex('start1', [0, 0])
-    g.add_vertex('start2', [200, 200])
-    g.add_vertex('start3', [200, 100])
-    g.add_vertex('qr1', [50, 50])
-    g.add_vertex('qr2', [50, 70])
-    g.add_vertex('qr3', [70, 100])
+    g.add_vertex('qr1',  [14., 22.])
+    g.add_vertex('qr2',  [21., 18.5])
+    g.add_vertex('qr3',  [13.5, 41.5])
+    g.add_vertex('qr4',  [31.5, 42.])
+    g.add_vertex('qr5',  [53.5, 41.5])
+    g.add_vertex('qr6',  [76., 18.])
+    g.add_vertex('qr7',  [76.5, 41.5])
+    g.add_vertex('qr8',  [76.5, 62.])
+    g.add_vertex('qr9',  [80., 81.])
+    g.add_vertex('qr10', [80., 104.5])
+    g.add_vertex('qr11', [54., 104.5])
+    g.add_vertex('qr12', [31.5, 104.5])
+    g.add_vertex('qr13', [14.5, 104.5])
+    g.add_vertex('qr14', [14., 118.5])
+    g.add_vertex('qr15', [21., 127.5])
+    g.add_vertex('qr16', [80., 127.5])
 
-    g.add_edge('start1', 'start2')
-    g.add_edge('start3', 'qr1')
-    g.add_edge('qr1', 'qr2')
-    g.add_edge('qr2', 'start2')
+    # g.add_edge('qr1', 'qr2')
     g.add_edge('qr1', 'qr3')
-    g.add_edge('qr3', 'start1')
-    g.add_edge('qr3', 'start2')
+    g.add_edge('qr2', 'qr6')
+    g.add_edge('qr6', 'qr7')
+    g.add_edge('qr5', 'qr7')
+    g.add_edge('qr4', 'qr5')
+    g.add_edge('qr3', 'qr4')
+    g.add_edge('qr3', 'qr4')
+    g.add_edge('qr3', 'qr13')
+    g.add_edge('qr13', 'qr14')
+    # g.add_edge('qr14', 'qr15')
+    g.add_edge('qr15', 'qr16')
+    g.add_edge('qr10', 'qr16')
+    g.add_edge('qr10', 'qr11')
+    g.add_edge('qr10', 'qr9')
+    g.add_edge('qr8', 'qr9')
+    g.add_edge('qr8', 'qr7')
+    g.add_edge('qr11', 'qr5')
+    g.add_edge('qr12', 'qr4')
+    g.add_edge('qr12', 'qr13')
 
     print('Graph data:')
     for v in g:
@@ -169,9 +238,9 @@ if __name__ == '__main__':
             wid = w.get_id()
             print('( %s , %s, %3d)' % (vid, wid, v.get_weight(w)))
 
-    dijkstra(g, g.get_vertex('start1'))
+    dijkstra(g, g.get_vertex('qr1'))
 
-    target = g.get_vertex('start3')
+    target = g.get_vertex('qr16')
     path = [target.get_id()]
     shortest(target, path)
     print('The shortest path : %s' % (path[::-1]))
