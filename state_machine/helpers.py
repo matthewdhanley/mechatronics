@@ -271,7 +271,8 @@ def set_motor_speed(serial_port, id, speed):
     
     # print("writing motor speed: %d" %speed)
     # motor_speed_str = speed.to_bytes(1, byteorder='little', signed=True)
-    motor_speed_str = bytes([int(speed)])
+    # motor_speed_str = bytes([int(speed)])
+    motor_speed_str = str(speed)
     serial_port.write(motor_speed_str)
 
     # read_ser=serial_port.readline()
@@ -307,15 +308,15 @@ def nudge_left(serial_port):
 
 def drive_forward(serial_port):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, 50 + DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, 50 + DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, DRIVE_SPEED)
     return
 
 
 def drive_backward(serial_port):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, 50 - DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, 50 - DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, DRIVE_SPEED)
     return
 
 
@@ -327,8 +328,8 @@ def stop_motors(serial_port):
 
 def turn_90_left(serial_port):
     # print("turning left")
-    set_motor_speed(serial_port, 1, 50 - DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, 50 + DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, DRIVE_SPEED)
     print("turning...")
     time.sleep(10)
     stop_motors(serial_port)
@@ -336,8 +337,8 @@ def turn_90_left(serial_port):
 
 def turn_90_right(serial_port):
     # print("turning right")
-    set_motor_speed(serial_port, 1, 50 + DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, 50 - DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, DRIVE_SPEED)
     print("turning...")
     time.sleep(10)
     stop_motors(serial_port)
