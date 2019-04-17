@@ -171,6 +171,7 @@ class RobotActions(object):
         goal_loc = self.G.get_vertex(goal).get_location()
         self.navigation_goal[0] = goal_loc[0]
         self.navigation_goal[1] = goal_loc[1]
+        direction = ''
         while 1:
             location = helpers.read_floor_qr(cap)
             if location is not None:
@@ -200,13 +201,22 @@ class RobotActions(object):
                     return
 
             if np.dot(diff, self.direction) > 0:
+                if direction != 'forward':
+                    direction = 'forward'
+                    print("going forward")
                 helpers.drive_forward(self.serial_nav)
 
             elif np.dot(diff, np.inner(left_rotation, self.direction).round()) > 0:
+                if direction != 'left':
+                    direction = 'left'
+                    print("going left")
                 helpers.turn_90_left(self.serial_nav)
                 self.direction = np.inner(left_rotation, self.direction).round()
 
             elif np.dot(diff, np.inner(right_rotation, self.direction).round()) > 0:
+                if direction != 'right':
+                    direction = 'right'
+                    print("going right")
                 helpers.turn_90_right(self.serial_nav)
                 self.direction = np.inner(right_rotation, self.direction).round()
 
