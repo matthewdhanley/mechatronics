@@ -85,13 +85,15 @@ def read_goal_qr():
 
     # cap.set(15, contrast)
     frame = vs.read()
-    frame = imutils.resize(frame, width=400)
     qr_found = False
     output_dict = None
     while not qr_found:
         frame = vs.read()
         frame = imutils.resize(frame, width=400)
-        barcodes = pyzbar.decode(frame)
+        try:
+            barcodes = pyzbar.decode(frame)
+        except TypeError:
+            continue
         if barcodes is not None and len(barcodes) == 1:
             barcode = barcodes[0]
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
