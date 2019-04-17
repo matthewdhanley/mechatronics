@@ -99,7 +99,7 @@ def read_goal_qr():
 
             if output_dict:
                 qr_found = True
-
+    vs.stream.release()
     return output_dict
 
 
@@ -185,11 +185,17 @@ def read_floor_qr(cap):
     output_dict = None
 
     if barcodes is not None and len(barcodes) == 1:
+        print("I see barcode.")
         barcode = barcodes[0]
         barcode_data = barcode.data.decode("utf-8").replace(' ', '')
 
         # Parse barcode location data
         output_dict = extract_floor_barcode_data(barcode_data)
+    cv2.imshow('test', frame)
+    if cv2.waitKey(5) & 0xFF == ord('q'):
+        cap.release()
+        cv2.destroyAllWindows()
+        exit(0)
     return output_dict
 
 
@@ -253,14 +259,14 @@ def set_motor_speed(serial_port, id, speed):
     motor_id_str = bytes([int(id)])
     serial_port.write(motor_id_str)
     
-    read_ser=serial_port.readline()
+    # read_ser=serial_port.readline()
     # print("reading id:" + read_ser)
     
     # print("writing motor speed: %d" %speed)
-    motor_speed_str = bytes([int(speed)])
+    motor_speed_str = speed.to_bytes(1, byteorder='big', signed=True)
     serial_port.write(motor_speed_str)
 
-    read_ser=serial_port.readline()
+    # read_ser=serial_port.readline()
     # print("reading speed:" + read_ser)
 
     # print("------------")
@@ -292,27 +298,27 @@ def nudge_left(serial_port):
 
 
 def drive_forward(serial_port):
-    print("driving forward")
+    # print("driving forward")
     set_motor_speed(serial_port, 1, 100)
     set_motor_speed(serial_port, 2, 100)
     return
 
 
 def drive_backward(serial_port):
-    print("driving forward")
+    # print("driving forward")
     set_motor_speed(serial_port, 1, -100)
     set_motor_speed(serial_port, 2, -100)
     return
 
 
 def stop_motors(serial_port):
-    print("stopping motors")
+    # print("stopping motors")
     set_motor_speed(serial_port, 1, 0)
     set_motor_speed(serial_port, 2, 0)
 
 
 def turn_90_left(serial_port):
-    print("turning left")
+    # print("turning left")
     set_motor_speed(serial_port, 1, -100)
     set_motor_speed(serial_port, 2, 100)
 
@@ -321,7 +327,7 @@ def turn_90_left(serial_port):
 
 
 def turn_90_right(serial_port):
-    print("turning right")
+    # print("turning right")
     set_motor_speed(serial_port, 1, 100)
     set_motor_speed(serial_port, 2, -100)
 

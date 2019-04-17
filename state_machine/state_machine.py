@@ -141,11 +141,12 @@ class RobotActions(object):
                 # If we see one QR Code, store it somehow
                 self.navigation_goal[0] = self.goal_qr['goal']['x']
                 self.navigation_goal[1] = self.goal_qr['goal']['y']
-                path_planner.dijkstra(self.G, self.G.get_vertex('qr1'))
+                path_planner.dijkstra(self.G, self.G.get_vertex('qr14'))
                 target = self.G.get_vertex('qr16')
                 path = [target.get_id()]
                 path_planner.shortest(target, path)
                 self.path = path[::-1]
+                print(self.path)
                 self.queued_trigger = self.drive_to_pallet()
                 # self.queued_trigger = self.align()
                 return
@@ -160,15 +161,16 @@ class RobotActions(object):
         Somehow figure out how to drive to the goal.
         :return: Nothing. Returning initiates trigger self.queued_trigger
         """
-        print("Driving to goal x: {}, y: {}".format(self.navigation_goal[0], self.navigation_goal[1]))
         right_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
         left_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
         cap = cv2.VideoCapture(1)  # turn on webcam
         last_location_update = time.time()
         path_iterator = iter(self.path)
-        goal1 = next(path_iterator)
-        goal_loc = self.G.get_vertex(goal1).get_location()
-        self.navigation_goal['location']['x']
+        goal = next(path_iterator)
+        print("New goal: {}".format(goal))
+        goal_loc = self.G.get_vertex(goal).get_location()
+        self.navigation_goal[0] = goal_loc[0]
+        self.navigation_goal[1] = goal_loc[1]
         while 1:
             location = helpers.read_floor_qr(cap)
             if location is not None:
@@ -185,9 +187,17 @@ class RobotActions(object):
             diff = self.navigation_goal - self.current_location
 
             if np.max(diff) <= self.nav_thresh:
-                print("I did it!")
-                self.queued_trigger = self.align()
-                return
+                try:
+                    goal = next(path_iterator)
+                    goal_loc = self.G.get_vertex(goal).get_location()
+                    self.navigation_goal[0] = goal_loc[0]
+                    self.navigation_goal[1] = goal_loc[1]
+                    diff = self.navigation_goal - self.current_location
+                    print("New goal: {}".format(goal))
+                except StopIteration:
+                    print("I did it!")
+                    self.queued_trigger = self.align()
+                    return
 
             if np.dot(diff, self.direction) > 0:
                 helpers.drive_forward(self.serial_nav)
