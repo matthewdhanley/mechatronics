@@ -104,10 +104,6 @@ def read_goal_qr():
 
             if output_dict:
                 qr_found = True
-                cv2.destroyAllWindows()
-        else:
-            cv2.imshow('frame', frame)
-            cv2.waitKey(5)
 
     vs.stream.stop()
     return output_dict
