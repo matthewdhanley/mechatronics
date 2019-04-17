@@ -11,6 +11,7 @@ import time
 import re
 #import matplotlib.pyplot as plt
 import os
+import struct
 
 # LOAD the camera parameters.
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
@@ -272,8 +273,9 @@ def set_motor_speed(serial_port, id, speed):
     # print("writing motor speed: %d" %speed)
     # motor_speed_str = speed.to_bytes(1, byteorder='little', signed=True)
     # motor_speed_str = bytes([int(speed)])
-    motor_speed_str = str(speed)+'\r\n'
-    serial_port.write(motor_speed_str.encode())
+    # motor_speed_str = str(speed)+'\r\n'
+    motor_speed_str = struct.pack('>B', speed)
+    serial_port.write(motor_speed_str)
 
     # read_ser=serial_port.readline()
     # print("reading speed:" + read_ser)
