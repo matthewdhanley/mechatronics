@@ -16,7 +16,7 @@ import os
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
-DRIVE_SPEED = 20
+DRIVE_SPEED = 50
 
 def get_camera():
     """
