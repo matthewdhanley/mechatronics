@@ -94,6 +94,7 @@ def read_goal_qr():
             barcodes = pyzbar.decode(frame)
         except TypeError:
             continue
+
         if barcodes is not None and len(barcodes) == 1:
             barcode = barcodes[0]
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
