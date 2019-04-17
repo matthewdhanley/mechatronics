@@ -160,6 +160,7 @@ class RobotActions(object):
         Somehow figure out how to drive to the goal.
         :return: Nothing. Returning initiates trigger self.queued_trigger
         """
+        time.sleep(3)
         right_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
         left_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
         cap = cv2.VideoCapture(0)  # turn on webcam
