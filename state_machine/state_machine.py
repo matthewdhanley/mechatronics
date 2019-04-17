@@ -10,6 +10,7 @@ import time
 import logging
 import cv2
 from state_machine import helpers
+from state_machine import path_planner
 import numpy as np
 # from state_machine import helpers
 # import state_machine.helpers
@@ -71,9 +72,10 @@ class RobotActions(object):
         self.current_location = np.array([0, 0])  # where we currently are. Assuming we start at 0,0
         self.nav_thresh = 5  # threshold in inches for how close we need to be to our target.
         self.drive_timeout = 30  # how long before we give up on driving.
-
+        self.path = None
         # Set up serial interface with Arduino
         self.test = test
+        self.G = path_planner.get_graph()
         if not self.test:
             self.serial_nav = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
             self.serial_nav.baudrate =9600
@@ -139,6 +141,11 @@ class RobotActions(object):
                 # If we see one QR Code, store it somehow
                 self.navigation_goal[0] = self.goal_qr['goal']['x']
                 self.navigation_goal[1] = self.goal_qr['goal']['y']
+                path_planner.dijkstra(self.G, self.G.get_vertex('qr1'))
+                target = self.G.get_vertex('qr16')
+                path = [target.get_id()]
+                path_planner.shortest(target, path)
+                self.path = path[::-1]
                 self.queued_trigger = self.drive_to_pallet()
                 # self.queued_trigger = self.align()
                 return
@@ -158,6 +165,10 @@ class RobotActions(object):
         left_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
         cap = cv2.VideoCapture(1)  # turn on webcam
         last_location_update = time.time()
+        path_iterator = iter(self.path)
+        goal1 = next(path_iterator)
+        goal_loc = self.G.get_vertex(goal1).get_location()
+        self.navigation_goal['location']['x']
         while 1:
             location = helpers.read_floor_qr(cap)
             if location is not None:
