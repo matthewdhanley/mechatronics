@@ -141,7 +141,7 @@ class RobotActions(object):
                 # If we see one QR Code, store it somehow
                 self.navigation_goal[0] = self.goal_qr['goal']['x']
                 self.navigation_goal[1] = self.goal_qr['goal']['y']
-                path_planner.dijkstra(self.G, self.G.get_vertex('qr14'))
+                path_planner.dijkstra(self.G, self.G.get_vertex('qr1'))
                 target = self.G.get_vertex('qr16')
                 path = [target.get_id()]
                 path_planner.shortest(target, path)

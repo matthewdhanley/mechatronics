@@ -191,11 +191,11 @@ def read_floor_qr(cap):
 
         # Parse barcode location data
         output_dict = extract_floor_barcode_data(barcode_data)
-    cv2.imshow('test', frame)
-    if cv2.waitKey(5) & 0xFF == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        exit(0)
+    # cv2.imshow('test', frame)
+    # if cv2.waitKey(5) & 0xFF == ord('q'):
+    #     cap.release()
+    #     cv2.destroyAllWindows()
+    #     exit(0)
     return output_dict
 
 
@@ -333,22 +333,6 @@ def turn_90_right(serial_port):
 
     time.sleep(2)
     stop_motors(serial_port)
-
-
-def build_map():
-    x_size = 200
-    y_size = 200
-    resolution = 0.5
-
-    grid = np.zeros([np.ceil(x_size/resolution).astype(int), np.ceil(y_size/resolution).astype(int)])
-    grid[0:20, 70:300] = 1
-    grid[48:70, 70:300] = 1
-    grid[70:300, 0:20] = 1
-    grid[70:300, 0:20] = 1
-    plt.imshow(grid)
-    plt.show()
-    return grid
-
 
 
 if __name__ == "__main__":
