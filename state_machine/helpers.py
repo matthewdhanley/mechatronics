@@ -16,7 +16,7 @@ import os
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
-DRIVE_SPEED = 50
+DRIVE_SPEED = 10
 
 def get_camera():
     """
@@ -329,7 +329,7 @@ def turn_90_left(serial_port):
     # print("turning left")
     set_motor_speed(serial_port, 1, -DRIVE_SPEED)
     set_motor_speed(serial_port, 2, DRIVE_SPEED)
-
+    print("turning...")
     time.sleep(2)
     stop_motors(serial_port)
 
@@ -338,7 +338,7 @@ def turn_90_right(serial_port):
     # print("turning right")
     set_motor_speed(serial_port, 1, DRIVE_SPEED)
     set_motor_speed(serial_port, 2, -DRIVE_SPEED)
-
+    print("turning...")
     time.sleep(2)
     stop_motors(serial_port)
 
