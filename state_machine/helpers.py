@@ -12,6 +12,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 
+# LOAD the camera parameters.
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
@@ -25,21 +26,22 @@ def get_camera():
     try:
         # this will only run if it's on the pi
         vs = VideoStream(usePiCamera=True).start()
-
     except:
         # if it's not running on the pi
         vs = VideoStream(src=0).start()
+
     time.sleep(2.0)
     return vs
 
 
-def extracct_barcode_data(data):
+def extract_floor_barcode_data(data):
     output_dict = {}
-    location_data = re.match('.*Loc:(?P<x>\d+),(?P<y>\d+).*', data)
+    # <x: 080.0, y: 127.5> !pz!
+    location_data = re.match('<x:\s*(?P<x>\d*\.\d*),\s*y:\s*(?P<y>\d*\.\d*)>.*', data)
     if location_data:
         output_dict['location'] = {}
-        output_dict['location']['x'] = int(location_data.group('x'))
-        output_dict['location']['y'] = int(location_data.group('y'))
+        output_dict['location']['x'] = float(location_data.group('x'))
+        output_dict['location']['y'] = float(location_data.group('y'))
 
     # Parse pallet rack data
     pallet_rack_data = re.match('.*PRacks:?([\d+,]+).*', data)
@@ -54,7 +56,22 @@ def extracct_barcode_data(data):
     return output_dict
 
 
-def read_qr(vs, show_video=False):
+def extract_goal_barcode_data(data):
+    output_dict = {'goal': {}}
+    output_dict['goal']['x'] = 100.0
+    output_dict['goal']['y'] = 200.0
+    return output_dict
+
+
+def nothing(nothing):
+    """
+    doesn't do anything
+    used with trackbars
+    """
+    pass
+
+
+def read_goal_qr():
     """
     Parses QR Code data as formatted for the competition.
     :param vs: imutils.video.VideoStream object
@@ -62,42 +79,75 @@ def read_qr(vs, show_video=False):
     :return: Array of QR code dictionaries.
     """
 
-    # plt.show()
+    vs = get_camera()
 
-    while 1:
+    # cap.set(15, contrast)
+    frame = vs.read()
+    frame = imutils.resize(frame, width=400)
+    qr_found = False
+    output_dict = None
+    while not qr_found:
         frame = vs.read()
-        # frame = imutils.resize(frame, width=800)
+        frame = imutils.resize(frame, width=400)
+        barcodes = pyzbar.decode(frame)
+        if barcodes is not None and len(barcodes) == 1:
+            barcode = barcodes[0]
+            barcode_data = barcode.data.decode("utf-8").replace(' ', '')
+
+            # Parse barcode location data
+            output_dict = extract_goal_barcode_data(barcode_data)
+
+            if output_dict:
+                qr_found = True
+
+    return output_dict
+
+
+
+def read_qr(show_video=False):
+    """
+    Parses QR Code data as formatted for the competition.
+    :param vs: imutils.video.VideoStream object
+    :param show_video: set to True to have a live stream pop up.
+    :return: Array of QR code dictionaries.
+    """
+
+    # Set up video capture. This is different if using the picamera, but we're not for this application?
+    cap = cv2.VideoCapture(1)
+    # cap.set(15, 0.05)
+
+    # set up stuff for the slider
+    alpha_slider_max = 1
+
+    # Open frame window. For testing only.
+    cv2.namedWindow('frame')
+    cv2.createTrackbar('contrast', 'frame', 0, alpha_slider_max, nothing)
+
+    while 1:  # while 1 for testing only
+        contrast = cv2.getTrackbarPos('contrast', 'frame')
+        # cap.set(15, contrast)
+        ret, frame = cap.read()
 
         barcodes = pyzbar.decode(frame)
 
         output_dicts = []
         observer_info = {}
+        cv2.imshow('frame', frame)
+
         for barcode in barcodes:
             # set up dictionary for the barcodes
             # Get coordinates for the bounding box of the barcode
             (x, y, w, h) = barcode.rect
-            # print("Bounding Box Coordinates:\n\tx: {}, y: {}, w: {}, h: {}".format(x, y, w, h))
-            # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            # cv2.arrowedLine(frame, a, b, (0, 0, 255), 3)  # x axis
-            # cv2.line(frame, b, c, (0, 255, 0))
-            # cv2.line(frame, c, d, (0, 255, 0))
-            # cv2.arrowedLine(frame, a, d, (0, 255, 0), 3)  # y axis
-            # x_unit = np.linalg.norm([b.x - a.x, b.y - a.y, 0])
-            # y_unit = np.linalg.norm([d.x - a.x, d.y - a.y, 0])
-            # z = np.cross(x_unit,y_unit)
 
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
-            barcode_type = barcode.type
-
-            # print("[INFO] found {}:\n\tbarcode: {}".format(barcode_type, barcode_data))
 
             # Parse barcode location data
-            output_dict = extracct_barcode_data(barcode_data)
+            output_dict = extract_barcode_data(barcode_data)
 
             # Get the pose of the barcode
             observer_info, img = determine_pose(frame, barcode, output_dict)
+            cv2.circle(img, barcode.polygon[0], 5,[255,0,0], 3)
             cv2.imshow("pose", img)
-            cv2.waitKey(5)
 
             if output_dict:
                 # output_dict['frame_location'] = [(frame_x + w)/2, frame_y]
@@ -112,10 +162,36 @@ def read_qr(vs, show_video=False):
         #     ax.scatter(observer_info['location']['x'], observer_info['location']['y'])
         # if output_dicts:
         #     ax.scatter(0,0, marker="x")
-            # plt.show()
-            # plt.pause(1)
-            # plt.close()
+        # plt.show()
+        # plt.pause(1)
+        # plt.close()
         # return output_dicts
+        if cv2.waitKey(5) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            exit(0)
+
+
+def read_floor_qr(cap):
+    """
+    Parses QR Code data as formatted for the competition.
+    :param vs: imutils.video.VideoStream object
+    :param show_video: set to True to have a live stream pop up.
+    :return: Array of QR code dictionaries.
+    """
+    ret, frame = cap.read()
+
+    barcodes = pyzbar.decode(frame)
+    output_dict = None
+
+    if barcodes is not None and len(barcodes) == 1:
+        barcode = barcodes[0]
+        barcode_data = barcode.data.decode("utf-8").replace(' ', '')
+
+        # Parse barcode location data
+        output_dict = extract_floor_barcode_data(barcode_data)
+    return output_dict
+
 
 
 def determine_pose(image, barcode, barcode_info):
@@ -173,8 +249,6 @@ def draw(img, corners, imgpts):
 
 
 def set_motor_speed(serial_port, id, speed):
-
-
     # print("writing motor id: %d" %(id)) 
     motor_id_str = bytes([int(id)])
     serial_port.write(motor_id_str)
@@ -192,33 +266,84 @@ def set_motor_speed(serial_port, id, speed):
     # print("------------")
     return
 
-def nudge_right(serial_port):
 
+def nudge_right(serial_port):
     # move forward
     set_motor_speed(serial_port, 1, 100)
     set_motor_speed(serial_port, 2, 100)
     time.sleep(.05)
 
     # stop motors
-    set_motor_speed(serial_port, 1, 0)
-    set_motor_speed(serial_port, 2, 0)
+    stop_motors(serial_port)
 
     return
 
-def nudge_left(serial_port):
 
+def nudge_left(serial_port):
     # move backwards
     set_motor_speed(serial_port, 1, -100)
     set_motor_speed(serial_port, 2, -100)
     time.sleep(.05)
 
     # stop motors
-    set_motor_speed(serial_port, 1, 0)
-    set_motor_speed(serial_port, 2, 0)
+    stop_motors(serial_port)
 
     return    
 
 
+def drive_forward(serial_port):
+    print("driving forward")
+    set_motor_speed(serial_port, 1, 100)
+    set_motor_speed(serial_port, 2, 100)
+    return
+
+
+def drive_backward(serial_port):
+    print("driving forward")
+    set_motor_speed(serial_port, 1, -100)
+    set_motor_speed(serial_port, 2, -100)
+    return
+
+
+def stop_motors(serial_port):
+    print("stopping motors")
+    set_motor_speed(serial_port, 1, 0)
+    set_motor_speed(serial_port, 2, 0)
+
+
+def turn_90_left(serial_port):
+    print("turning left")
+    set_motor_speed(serial_port, 1, -100)
+    set_motor_speed(serial_port, 2, 100)
+
+    time.sleep(2)
+    stop_motors(serial_port)
+
+
+def turn_90_right(serial_port):
+    print("turning right")
+    set_motor_speed(serial_port, 1, 100)
+    set_motor_speed(serial_port, 2, -100)
+
+    time.sleep(2)
+    stop_motors(serial_port)
+
+
+def build_map():
+    x_size = 200
+    y_size = 200
+    resolution = 0.5
+
+    grid = np.zeros([np.ceil(x_size/resolution).astype(int), np.ceil(y_size/resolution).astype(int)])
+    grid[0:20, 70:300] = 1
+    grid[48:70, 70:300] = 1
+    grid[70:300, 0:20] = 1
+    grid[70:300, 0:20] = 1
+    plt.imshow(grid)
+    plt.show()
+    return grid
+
+
+
 if __name__ == "__main__":
-    camera = get_camera()
-    read_qr(camera, show_video=True)
+    build_map()

@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('transitions').setLevel(logging.INFO)
 
 
-def robot_sm():
+def robot_sm(test=False):
     """
     Creates a state machine with states defined in the 'states' array and transitions added manually
     :return: state machine object
@@ -28,7 +28,7 @@ def robot_sm():
     states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet']
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
-    robot = RobotActions()
+    robot = RobotActions(test=test)
 
     # Initialize the state machine
     machine = Machine(model=robot, states=states, initial='startup', ignore_invalid_triggers=True)
@@ -59,7 +59,7 @@ class RobotActions(object):
     This means that we can call "state machine" functions from within this class. I.e. if I wanted to access the current
     state, I could get it with self.state
     """
-    def __init__(self):
+    def __init__(self, test=False):
         """
         Constructor. This function runs when a new object is initialized.
         :return: None
@@ -67,15 +67,29 @@ class RobotActions(object):
         self.timeout = 5000  # seconds
         self.vs = helpers.get_camera()  # get camera
         self.goal_qr = {}  # to store the goal QR code
-        self.navigation_goal = {'x': None, 'y': None}  # where we want the robot to drive to
-        self.current_location = {'x': 0, 'y': 0}  # where we currently are. Assuming we start at 0,0
+        self.navigation_goal = np.array([0, 0])  # where we want the robot to drive to
+        self.current_location = np.array([0, 0])  # where we currently are. Assuming we start at 0,0
+        self.nav_thresh = 5  # threshold in inches for how close we need to be to our target.
+        self.drive_timeout = 30  # how long before we give up on driving.
 
         # Set up serial interface with Arduino
-        self.serial_nav = serial.Serial("/dev/ttyUSB1",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
-        self.serial_nav.baudrate =9600
+        self.test = test
+        if not self.test:
+            self.serial_nav = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+            self.serial_nav.baudrate =9600
 
-        self.serial_grip = serial.Serial("/dev/ttyUSB0",9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
-        self.serial_grip.baudrate =9600
+            self.serial_grip = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
+            self.serial_grip.baudrate =9600
+        else:
+            self.serial_nav = serial.Serial("COM2", 9600,
+                                            timeout=1)  # change ACM number as found from ls /dev/tty/ACM*
+            self.serial_nav.baudrate = 9600
+
+            self.serial_grip = serial.Serial("COM4", 9600,
+                                             timeout=1)  # change ACM number as found from ls /dev/tty/ACM*
+            self.serial_grip.baudrate = 9600
+
+        self.direction = np.array([1, 0])  # assuming that we are starting faced in the positive X direction.
 
     def __del__(self):
         """
@@ -119,15 +133,14 @@ class RobotActions(object):
         print("Waiting for Initial QR Code.")
         begin_time = int(time.time())  # time the loop started
         while 1:
-            qr_codes = helpers.read_qr(self.vs, show_video=True)
+            self.goal_qr = helpers.read_goal_qr()
 
-            if qr_codes is not None and len(qr_codes) == 1:
+            if self.goal_qr is not None:  # in reality, it should never be None based on the nature of the loop
                 # If we see one QR Code, store it somehow
-                self.goal_qr = qr_codes[0]
-                self.navigation_goal = self.goal_qr['location']
-                cv2.destroyAllWindows()
-                # self.queued_trigger = self.drive_to_pallet()
-                self.queued_trigger = self.align()
+                self.navigation_goal[0] = self.goal_qr['goal']['x']
+                self.navigation_goal[1] = self.goal_qr['goal']['y']
+                self.queued_trigger = self.drive_to_pallet()
+                # self.queued_trigger = self.align()
                 return
 
             # Check for Timeout
@@ -140,12 +153,47 @@ class RobotActions(object):
         Somehow figure out how to drive to the goal.
         :return: Nothing. Returning initiates trigger self.queued_trigger
         """
-        print("Driving to goal x: {}, y: {}".format(self.navigation_goal['x'], self.navigation_goal['y']))
+        print("Driving to goal x: {}, y: {}".format(self.navigation_goal[0], self.navigation_goal[1]))
+        right_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
+        left_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
+        cap = cv2.VideoCapture(1)  # turn on webcam
+        last_location_update = time.time()
         while 1:
-            # Figure out how we get to the goal here
-            # TODO we will also need a way to differentiate whether we are driving to pick up or drop off. Likely just
-            # another class variable.
-            pass
+            location = helpers.read_floor_qr(cap)
+            if location is not None:
+                print("updated location.")
+                last_location_update = time.time()
+                self.current_location[0] = location['location']['x']
+                self.current_location[1] = location['location']['y']
+
+            if time.time() - last_location_update > self.drive_timeout:
+                print("I'm scared and lonely and haven't figured out where I am in a long time.")
+                self.queued_trigger = self.goto_safe()
+
+            # this logic will turn us when we are aligned with the target in the current direction.
+            diff = self.navigation_goal - self.current_location
+
+            if np.max(diff) <= self.nav_thresh:
+                print("I did it!")
+                self.queued_trigger = self.align()
+                return
+
+            if np.dot(diff, self.direction) > 0:
+                helpers.drive_forward(self.serial_nav)
+
+            elif np.dot(diff, np.inner(left_rotation, self.direction).round()) > 0:
+                helpers.turn_90_left(self.serial_nav)
+                self.direction = np.inner(left_rotation, self.direction).round()
+
+            elif np.dot(diff, np.inner(right_rotation, self.direction).round()) > 0:
+                helpers.turn_90_right(self.serial_nav)
+                self.direction = np.inner(right_rotation, self.direction).round()
+
+            else:
+                print("I'm confused.")
+                self.queued_trigger = self.goto_safe()
+                return
+
 
     def on_enter_align_pallet(self):
         """
@@ -155,13 +203,13 @@ class RobotActions(object):
         print("Aligning Robot")
 
         # # x val neeeded to be centered
-        x_center = 103; 
+        x_center = 103
         while 1:
             qr_codes = helpers.read_qr(self.vs, show_video=True)
 
             if qr_codes is not None and len(qr_codes) == 1:
                 print(qr_codes[0]['frame_location'][0])
-                x_error  = qr_codes[0]['frame_location'][0] - x_center;
+                x_error = qr_codes[0]['frame_location'][0] - x_center
                 print(x_error)
 
                 if x_error > 3:
@@ -177,7 +225,6 @@ class RobotActions(object):
                     self.queued_trigger = self.pickup()
 
                 time.sleep(2)
-
 
     def on_enter_pickup_pallet(self):
         """
