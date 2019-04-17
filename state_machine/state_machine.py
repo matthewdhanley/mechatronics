@@ -9,8 +9,9 @@ from transitions import Machine
 import time
 import logging
 import cv2
-from state_machine import helpers
-from state_machine import path_planner
+
+import state_machine.helpers as helpers
+import state_machine.path_planner as path_planner
 import numpy as np
 # from state_machine import helpers
 # import state_machine.helpers
@@ -66,7 +67,6 @@ class RobotActions(object):
         :return: None
         """
         self.timeout = 5000  # seconds
-        self.vs = helpers.get_camera()  # get camera
         self.goal_qr = {}  # to store the goal QR code
         self.navigation_goal = np.array([0, 0])  # where we want the robot to drive to
         self.current_location = np.array([0, 0])  # where we currently are. Assuming we start at 0,0
@@ -98,7 +98,6 @@ class RobotActions(object):
         Destructor. This funtion runs when the object is destroyed.
         :return: None
         """
-        self.vs.stop()
         cv2.destroyAllWindows()
 
     def queued_trigger(self):

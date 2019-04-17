@@ -245,71 +245,14 @@ if __name__ == '__main__':
     shortest(target, path)
     print('The shortest path : %s' % (path[::-1]))
 
+    #class Rack:
+    #    direction = np.array([]) # direction bot must face to get pallet
+    #    qr1 = '' # qr code from which bot drives forward
+    #    qr2 = '' # qr code from which bot drives backward
 
-    class Rack:
-        direction = np.array([]) # direction bot must face to get pallet
-        qr1 = '' # qr code from which bot drives forward
-        qr2 = '' # qr code from which bot drives backward
-
-    Rack racks[12]
-    racks[0].direction = np.array([1,0])
-    racks[0].qr1 = 'qr2'
-    racks[0].qr2 = 'qr6'
-
-    racks[1].direction = np.array([-1,0])
-    racks[1].qr1 = 'qr10'
-    racks[1].qr2 = 'qr13'
-
-    racks[2].direction = np.array([1,0])
-    racks[2].qr1 = 'qr15'
-    racks[2].qr2 = 'qr16'
-
-    racks[3].direction = np.array([-1,0])
-    racks[3].qr1 = 'qr16'
-    racks[3].qr2 = 'qr15'
-
-    racks[4].direction = np.array([0,-1])
-    racks[4].qr1 = 'qr13'
-    racks[4].qr2 = 'qr3'
-
-    racks[5].direction = np.array([0,-1])
-    racks[5].qr1 = 'qr13'
-    racks[5].qr2 = 'qr3'
-
-    racks[6].direction = np.array([0,1])
-    racks[6].qr1 = 'qr4'
-    racks[6].qr2 = 'qr12'
-
-    racks[7].direction = np.array([0,-1])
-    racks[7].qr1 = 'qr11'
-    racks[7].qr2 = 'qr5'
-
-    racks[8].direction = np.array([1,0])
-    racks[8].qr1 = 'qr7'
-    racks[8].qr2 = 'qr5'
-
-    racks[9].direction = np.array([-1,0])
-    racks[9].qr1 = 'qr6'
-    racks[9].qr2 = 'qr2'
-
-    racks[10].direction = np.array([0,1])
-    racks[10].qr1 = 'qr6'
-    racks[10].qr2 = 'qr7'
-
-    racks[11].direction = np.array([0,1])
-    racks[11].qr1 = 'qr10'
-    racks[11].qr2 = 'qr16'
-
-    # other map:
-    racks[8].direction = np.array([0,1])
-    racks[8].qr1 = 'qr17'
-    racks[8].qr2 = 'qr5'
-
-    racks[9].direction = np.array([0,-1])
-    racks[9].qr1 = 'qr7'
-    racks[9].qr2 = 'qr6'
-
-    # rack_loc = self.G.get_vertex(rack.qr1).get_location()
+    #Rack racks[12]
+    #racks[0].direction = np.array([1,0])
+        # rack_loc = self.G.get_vertex(rack.qr1).get_location()
     # get path length
     # rack_loc = self.G.get_vertex(rack.qr2).get_location()
     # get path length

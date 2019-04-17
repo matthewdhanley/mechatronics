@@ -9,7 +9,7 @@ from pyzbar import pyzbar
 from imutils.video import VideoStream
 import time
 import re
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 
 # LOAD the camera parameters.
@@ -25,7 +25,9 @@ def get_camera():
     """
     try:
         # this will only run if it's on the pi
-        vs = VideoStream(usePiCamera=True).start()
+        vs = VideoStream(usePiCamera=True)
+        time.sleep(0.5)
+        vs.start()
     except:
         # if it's not running on the pi
         vs = VideoStream(src=0).start()
@@ -99,7 +101,12 @@ def read_goal_qr():
 
             if output_dict:
                 qr_found = True
-    vs.stream.release()
+                cv2.destroyAllWindows()
+        else:
+            cv2.imshow('frame', frame)
+            cv2.waitKey(5)
+
+    vs.stream.stop()
     return output_dict
 
 
