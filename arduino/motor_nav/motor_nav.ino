@@ -138,7 +138,7 @@ void get_command_motor()
     Serial.println(id);
     
     if (Serial.available() > 0) {
-      int motor_speed = Serial.parseInt();
+      int motor_speed = Serial.parseInt() - 50;
         switch (id)
         {
           case 1:
