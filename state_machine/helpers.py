@@ -330,7 +330,7 @@ def turn_90_left(serial_port):
     set_motor_speed(serial_port, 1, -DRIVE_SPEED)
     set_motor_speed(serial_port, 2, DRIVE_SPEED)
     print("turning...")
-    time.sleep(2)
+    time.sleep(10)
     stop_motors(serial_port)
 
 
@@ -339,7 +339,7 @@ def turn_90_right(serial_port):
     set_motor_speed(serial_port, 1, DRIVE_SPEED)
     set_motor_speed(serial_port, 2, -DRIVE_SPEED)
     print("turning...")
-    time.sleep(2)
+    time.sleep(10)
     stop_motors(serial_port)
 
 
