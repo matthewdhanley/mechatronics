@@ -272,9 +272,9 @@ def set_motor_speed(serial_port, id, speed):
     
     # print("writing motor speed: %d" %speed)
     # motor_speed_str = speed.to_bytes(1, byteorder='little', signed=True)
-    motor_speed_str = bytes([int(speed)])
+    # motor_speed_str = bytes([int(speed)])
     # motor_speed_str = str(speed)+'\r\n'
-    # motor_speed_str = struct.pack('>B', int(speed))
+    motor_speed_str = struct.pack('<b', int(speed))
     serial_port.write(motor_speed_str)
 
     # read_ser=serial_port.readline()
