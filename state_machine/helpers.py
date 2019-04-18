@@ -264,13 +264,13 @@ def draw(img, corners, imgpts):
 
 def set_motor_speed(serial_port, id, speed):
     # print("writing motor id: %d" %(id)) 
-    motor_id_str = bytearray([int(id)])
+    motor_id_str = bytes([int(id)])
     serial_port.write(motor_id_str)
     print(motor_id_str)
     
     # read_ser=serial_port.readline()
     # print("reading id:" + read_ser)
-    
+    time.sleep(0.1)
     # print("writing motor speed: %d" %speed)
     # motor_speed_str = speed.to_bytes(1, byteorder='little', signed=True)
     # motor_speed_str = bytes([int(speed)])
