@@ -17,7 +17,7 @@ import struct
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
-DRIVE_SPEED = 100
+DRIVE_SPEED = 20
 
 def get_camera():
     """
@@ -264,7 +264,7 @@ def draw(img, corners, imgpts):
 
 def set_motor_speed(serial_port, id, speed):
     # print("writing motor id: %d" %(id)) 
-    motor_id_str = bytes([int(id)])
+    motor_id_str = bytearray([int(id)])
     serial_port.write(motor_id_str)
     print(motor_id_str)
     
