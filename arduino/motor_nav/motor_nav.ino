@@ -104,8 +104,8 @@ void turn_right(){
 }
 
 void stop_motors(){
-  motor1.drive(max_speed/2);
-  motor2.drive(max_speed/2);
+  motor1.drive(0);
+  motor2.drive(0);
 }
 
 void read_tape_sensors(){
@@ -123,23 +123,22 @@ void read_tape_sensors(){
 
 
 void get_command_motor()
-{
-
-  // Get motor navigation command from raspberry pi:
-  if (Serial.available() > 0) {
-    
+{  
     int id = Serial.parseInt();
     // check to make sure its id not a speed:
-    while(id > 4 || id <-4)
+    while(id > 4 || id <=0)
     {
       id = Serial.parseInt();
       Serial.println(id);    
     }
     Serial.println(id);
+//
+//    while (Serial.available() == 0){
+//        delay(1);
+//    }
     
-    if (Serial.available() > 0) {
+    while (Serial.available() > 0) {
       int motor_speed = Serial.parseInt();
-//      motor_speed -= 50;
         switch (id)
         {
           case 1:
@@ -157,7 +156,6 @@ void get_command_motor()
   
   }
   
-}
 
 void drive_motor()
 {
