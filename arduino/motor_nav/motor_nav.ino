@@ -124,6 +124,7 @@ void read_tape_sensors(){
 
 void get_command_motor()
 {  
+  if (Serial.available() > 0) {
     int id = Serial.parseInt();
     // check to make sure its id not a speed:
     while(id > 4 || id <=0)
@@ -136,8 +137,8 @@ void get_command_motor()
 //    while (Serial.available() == 0){
 //        delay(1);
 //    }
-    
-    while (Serial.available() > 0) {
+  
+  if (Serial.available() > 0){
       int motor_speed = Serial.parseInt();
         switch (id)
         {
@@ -150,12 +151,11 @@ void get_command_motor()
           default:
             break;
         }
-        Serial.println(motor_speed);        
-      
+        Serial.println(motor_speed);
     }
   
   }
-  
+}
 
 void drive_motor()
 {
