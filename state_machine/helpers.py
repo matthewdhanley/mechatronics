@@ -282,7 +282,7 @@ def set_motor_speed(serial_port, id, speed):
     motor_speed_str = str(int(speed))
     motor_speed_str = motor_id_str + '\r\n' + motor_speed_str
     # print(motor_speed_str)
-    serial_port.write('{}\\r\\n{}'.format(int(id), int(speed)).encode())
+    serial_port.write('{}\r\n{}'.format(int(id), int(speed)).encode())
     # read_ser=serial_port.readline()
     # print("reading speed:" + read_ser)
 
