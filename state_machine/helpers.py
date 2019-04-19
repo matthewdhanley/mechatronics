@@ -317,8 +317,8 @@ def nudge_left(serial_port):
 
 def drive_forward(serial_port):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, 50)
+    set_motor_speed(serial_port, 2, 50)
     return
 
 
