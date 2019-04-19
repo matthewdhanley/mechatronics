@@ -163,7 +163,7 @@ class RobotActions(object):
         time.sleep(3)
         right_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
         left_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
-        cap = cv2.VideoCapture(0)  # turn on webcam
+        cap = cv2.VideoCapture(1)  # turn on webcam
         last_location_update = time.time()
         path_iterator = iter(self.path)
         goal = next(path_iterator)
