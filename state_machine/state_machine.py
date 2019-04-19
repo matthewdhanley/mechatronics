@@ -79,9 +79,14 @@ class RobotActions(object):
         if not self.test:
             self.serial_nav = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
             self.serial_nav.baudrate =9600
-
+            time.sleep(1)
+            self.serial_nav.setDTR(level=0)
+            time.sleep(1)
             self.serial_grip = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
             self.serial_grip.baudrate =9600
+            time.sleep(1)
+            self.serial_grip.setDTR(level=0)
+            time.sleep(1)
         else:
             self.serial_nav = serial.Serial("COM2", 9600,
                                             timeout=1)  # change ACM number as found from ls /dev/tty/ACM*
