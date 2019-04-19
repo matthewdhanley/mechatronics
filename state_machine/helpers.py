@@ -124,7 +124,7 @@ def read_qr(show_video=False):
     """
 
     # Set up video capture. This is different if using the picamera, but we're not for this application?
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     # cap.set(15, 0.05)
 
     # set up stuff for the slider

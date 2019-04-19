@@ -13,7 +13,7 @@ import state_machine.state_machine as sm
 
 
 def main():
-    robot = sm.robot_sm(test=True)
+    robot = sm.robot_sm(test=False)
     robot.queued_trigger = robot.begin()
     while 1:
         robot.queued_trigger()
