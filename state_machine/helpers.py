@@ -17,7 +17,7 @@ import struct
 with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal_output.npz'))) as X:
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
-DRIVE_SPEED = 20
+DRIVE_SPEED = -80
 
 def get_camera():
     """
@@ -183,15 +183,22 @@ def read_qr(show_video=False):
             exit(0)
 
 
-def read_floor_qr(cap):
+def check_for_white(frame):
+    ret, thresh1 = cv2.threshold(frame, 210, 255, cv2.THRESH_BINARY)
+    if np.sum(thresh1) > 5000000:
+        return True
+    else:
+        return False
+
+
+def read_floor_qr(frame):
     """
     Parses QR Code data as formatted for the competition.
     :param vs: imutils.video.VideoStream object
     :param show_video: set to True to have a live stream pop up.
     :return: Array of QR code dictionaries.
     """
-    ret, frame = cap.read()
-
+    # time.sleep(3)
     barcodes = pyzbar.decode(frame)
     output_dict = None
 
@@ -202,8 +209,8 @@ def read_floor_qr(cap):
 
         # Parse barcode location data
         output_dict = extract_floor_barcode_data(barcode_data)
-    # cv2.imshow('test', frame)
-    # if cv2.waitKey(5) & 0xFF == ord('q'):
+    # cv2.imshow('test', thresh1)
+    # if cv2.waitKey(10000) & 0xFF == ord('q'):
     #     cap.release()
     #     cv2.destroyAllWindows()
     #     exit(0)
@@ -266,22 +273,22 @@ def draw(img, corners, imgpts):
 
 
 def set_motor_speed(serial_port, id, speed):
-    # print("writing motor id: %d" %(id)) 
-    motor_id_str = str(id)
+    # print("writing motor id: %d" %(id))
     # serial_port.flush()
-    serial_port.write(motor_id_str.encode())
+    serial_port.write(bytes([int(id)]))
     # print(motor_id_str)
-    
+
     # read_ser=serial_port.readline()
     # print("reading id:" + read_ser)
-    time.sleep(0.01)
+    # time.sleep(0.01)
     # print("writing motor speed: %d" %speed)
     # motor_speed_str = speed.to_bytes(1, byteorder='little', signed=True)
-    # motor_speed_str = bytes([int(speed)])
+    serial_port.write(bytes([int(speed)]))
+    # print(int(speed))
     # motor_speed_str = str(speed)+'\r\n'
-    motor_speed_str = str(int(speed))
-    serial_port.write(motor_speed_str.encode())
-    motor_speed_str = motor_id_str + '\r\n' + motor_speed_str
+    # motor_speed_str = str(int(speed))
+    # serial_port.write(motor_speed_str.encode())
+    # motor_speed_str = motor_id_str + '\r\n' + motor_speed_str
     # print(motor_speed_str)
     # serial_port.write('{}\r\n{}'.format(int(id), int(speed)).encode())
     # read_ser=serial_port.readline()
@@ -312,20 +319,27 @@ def nudge_left(serial_port):
     # stop motors
     stop_motors(serial_port)
 
-    return    
+    return
 
 
-def drive_forward(serial_port):
+def drive_forward(serial_port, speed):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, 50)
-    set_motor_speed(serial_port, 2, 50)
+    set_motor_speed(serial_port, 1, speed)
+    set_motor_speed(serial_port, 2, speed)
+    return
+
+
+def drive_forward_slow(serial_port):
+    # print("driving forward")
+    set_motor_speed(serial_port, 1, 10)
+    set_motor_speed(serial_port, 2, 10)
     return
 
 
 def drive_backward(serial_port):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, -DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, -DRIVE_SPEED)
     return
 
 
@@ -338,21 +352,23 @@ def stop_motors(serial_port):
 def turn_90_left(serial_port):
     # print("turning left")
     set_motor_speed(serial_port, 1, DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, DRIVE_SPEED)
+    set_motor_speed(serial_port, 2, -DRIVE_SPEED)
     print("turning...")
-    time.sleep(10)
+    time.sleep(2.5)
     stop_motors(serial_port)
 
 
 def turn_90_right(serial_port):
     # print("turning right")
-    set_motor_speed(serial_port, 1, DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, -DRIVE_SPEED)
     set_motor_speed(serial_port, 2, DRIVE_SPEED)
     print("turning...")
-    time.sleep(10)
+    time.sleep(2.5)
     stop_motors(serial_port)
 
 
 if __name__ == "__main__":
     # build_map()
-    read_qr()
+
+    cap = cv2.VideoCapture(0)
+    read_floor_qr(cap)

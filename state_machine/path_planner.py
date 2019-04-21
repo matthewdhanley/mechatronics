@@ -50,6 +50,9 @@ class Vertex:
     def calc_distance(self, other):
         return np.sum(np.abs(other.location-self.location))
 
+    def calc_distance_from_point(self, point):
+        return np.sum(np.abs(point - self.location))
+
     def set_previous(self, prev):
         self.previous = prev
 
@@ -97,6 +100,14 @@ class Graph:
 
     def get_previous(self, current):
         return self.previous
+
+    def get_nearest(self, location):
+        nearest_node = None
+        min_distance = 10000000
+        for vertex in self.vert_dict:
+            if vertex.calc_distance_from_point(location) < min_distance:
+                nearest_node = vertex
+        return nearest_node
 
 
 def shortest(v, path):
@@ -165,6 +176,7 @@ def get_graph():
     g.add_vertex('qr14', [14., 118.5])
     g.add_vertex('qr15', [21., 127.5])
     g.add_vertex('qr16', [80., 127.5])
+    # g.add_vertex('qr16', [80., 127.5])
 
     # g.add_edge('qr1', 'qr2')
     g.add_edge('qr1', 'qr3')
@@ -180,6 +192,7 @@ def get_graph():
     g.add_edge('qr15', 'qr16')
     g.add_edge('qr10', 'qr16')
     g.add_edge('qr10', 'qr11')
+    g.add_edge('qr12', 'qr11')
     g.add_edge('qr10', 'qr9')
     g.add_edge('qr8', 'qr9')
     g.add_edge('qr8', 'qr7')
