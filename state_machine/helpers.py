@@ -217,7 +217,6 @@ def read_floor_qr(frame):
     return output_dict
 
 
-
 def determine_pose(image, barcode, barcode_info):
     """
     Procedure to get pose of the qr code:
