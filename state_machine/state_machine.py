@@ -226,6 +226,13 @@ class RobotActions(object):
                 new_node = self.G.get_nearest(self.current_location)
                 print("Updated location. Current node: {}".format(new_node))
                 print("Updated Path:")
+                # target1 = racks[self.goal_qr.rack].qr1
+                # path1 = self.update_path(new_node, target1)
+                # target2 = racks[self.goal_qr.rack].qr2
+                # path2 = self.update_path(new_node, target2)
+                # Compare path lengths
+                # Choose shorter path and record choice (qr1 or qr2)
+                self.target = racks[self.goal_qr.rack].qr1
                 self.path = self.update_path(new_node, self.target)
                 print(self.path)
                 path_iterator = iter(self.path)
