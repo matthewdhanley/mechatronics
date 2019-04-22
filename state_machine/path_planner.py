@@ -298,16 +298,84 @@ if __name__ == '__main__':
     shortest(target, path)
     print('The shortest path : %s' % (path[::-1]))
 
-    #class Rack:
-    #    direction = np.array([]) # direction bot must face to get pallet
-    #    qr1 = '' # qr code from which bot drives forward
-    #    qr2 = '' # qr code from which bot drives backward
+class Rack:
+    name = '' # rack number
+    direction = np.array([]) # direction bot must face to get pallet
+    qr1 = '' # qr code from which bot drives forward
+    qr2 = '' # qr code from which bot drives backward
 
-    #Rack racks[12]
-    #racks[0].direction = np.array([1,0])
-        # rack_loc = self.G.get_vertex(rack.qr1).get_location()
-    # get path length
-    # rack_loc = self.G.get_vertex(rack.qr2).get_location()
-    # get path length
-    # choose shorter path
-    # once there allign bot direction to rack.direction and drive forward for rack.qr1 or back for rack.qr2
+Rack racks[12]
+
+racks[0].name = '07'
+racks[0].direction = np.array([1,0])
+racks[0].qr1 = 'qr22'
+racks[0].qr2 = 'qr21'
+
+racks[1].name = '57'
+racks[1].direction = np.array([-1,0])
+racks[1].qr1 = 'qr25'
+racks[1].qr2 = 'qr26'
+
+racks[2].name = '46'
+racks[2].direction = np.array([1,0])
+racks[2].qr1 = 'qr37'
+racks[2].qr2 = 'qr36'
+
+racks[3].name = '64'
+racks[3].direction = np.array([-1,0])
+racks[3].qr1 = 'qr36'
+racks[3].qr2 = 'qr37'
+
+racks[4].name = '45'
+racks[4].direction = np.array([0,-1])
+racks[4].qr1 = 'qr29'
+racks[4].qr2 = 'qr30'
+
+racks[5].name = '72'
+racks[5].direction = np.array([0,-1])
+racks[5].qr1 = 'qr27'
+racks[5].qr2 = 'qr28'
+
+racks[6].name = '42'
+racks[6].direction = np.array([0,1])
+racks[6].qr1 = 'qr31'
+racks[6].qr2 = 'qr32'
+
+racks[7].name = '91'
+racks[7].direction = np.array([0,-1])
+racks[7].qr1 = 'qr33'
+racks[7].qr2 = 'qr34'
+
+racks[8].name = '80'
+racks[8].direction = np.array([1,0])
+racks[8].qr1 = 'qr23'
+racks[8].qr2 = 'qr24'
+
+racks[9].name = '36'
+racks[9].direction = np.array([-1,0])
+racks[9].qr1 = 'qr20'
+racks[9].qr2 = 'qr22'
+
+racks[10].name = '31'
+racks[10].direction = np.array([0,1])
+racks[10].qr1 = 'qr29'
+racks[10].qr2 = 'qr18'
+
+racks[11].name = '23'
+racks[11].direction = np.array([0,1])
+racks[11].qr1 = 'qr17'
+racks[11].qr2 = 'qr35'
+
+# other map:
+racks[8].direction = np.array([0,1])
+
+racks[9].direction = np.array([0,-1])
+racks[9].qr1 = 'qr29'
+racks[9].qr2 = 'qr7'
+
+# rack_loc = self.G.get_vertex(rack.qr1).get_location()
+# get path length
+# rack_loc = self.G.get_vertex(rack.qr2).get_location()
+# get path length
+# choose shorter path
+# once there allign bot direction to rack.direction and drive forward for rack.qr1 or back for rack.qr2
