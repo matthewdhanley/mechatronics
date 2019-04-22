@@ -73,7 +73,7 @@ class RobotActions(object):
         self.timeout = 5000  # seconds
         self.goal_qr = {}  # to store the goal QR code
         self.intermediate_goal_loc = np.array([0, 0])  # where we want the robot to drive to
-        self.current_location = np.array([14, 118.5])  # where we currently are. Assuming we start at 0,0
+        self.current_location = np.array([0, 0])  # where we currently are. Assuming we start at 0,0
         self.nav_thresh = 5  # threshold in inches for how close we need to be to our target.
         self.drive_timeout = 300  # how long before we give up on driving.
         self.path = None
@@ -96,7 +96,7 @@ class RobotActions(object):
                                              timeout=1)  # change ACM number as found from ls /dev/tty/ACM*
             self.serial_grip.baudrate = 9600
 
-        self.direction = np.array([0, -1])  # assuming that we are starting faced in the positive X direction.
+        self.direction = np.array([1, 0])
 
     def __del__(self):
         """
@@ -106,12 +106,13 @@ class RobotActions(object):
         cv2.destroyAllWindows()
 
     def update_path(self, current_node, target_node):
+        print("Target Node: {}, Current Node: {}".format(target_node, current_node))
+        self.G = path_planner.get_graph()
         path_planner.dijkstra(self.G, self.G.get_vertex(current_node))
         target = self.G.get_vertex(target_node)
-        path = [target.get_id()]
+        path = [target_node]
         path_planner.shortest(target, path)
-        self.path = path[::-1]
-        print(self.path)
+        return path[::-1]
 
     def queued_trigger(self):
         """
@@ -154,7 +155,9 @@ class RobotActions(object):
                 self.intermediate_goal_loc[0] = self.goal_qr['goal']['x']
                 self.intermediate_goal_loc[1] = self.goal_qr['goal']['y']
                 self.target = self.G.get_nearest(self.intermediate_goal_loc)
-                self.update_path('qr6', self.target.id)
+                self.target = 'qr2'
+
+                self.path = self.update_path('qr1', 'qr2')
                 self.queued_trigger = self.drive_to_pallet()
                 # self.queued_trigger = self.align()
                 return
@@ -204,7 +207,36 @@ class RobotActions(object):
         # variable to hold last string that was printed to the screen
         direction = ''
 
+        location = None
+        helpers.drive_forward(self.serial_nav, QR_MOTOR_SPEED)
+        while location is None:
+            ret, frame = cap.read()
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            else:
+                exit(1)
+                # check to see if there could be a qr code in the frame
+
+            # try to extract info from the QR code
+            location = helpers.read_floor_qr(frame)
+
+            if location is not None:
+                self.current_location[0] = location['location']['x']
+                self.current_location[1] = location['location']['y']
+                new_node = self.G.get_nearest(self.current_location)
+                print("Updated location. Current node: {}".format(new_node))
+                print("Updated Path:")
+                self.path = self.update_path(new_node, self.target)
+                print(self.path)
+                path_iterator = iter(self.path)
+                intermediate_goal = next(path_iterator)
+                intermediate_goal_loc = self.G.get_vertex(intermediate_goal).get_location()
+                self.intermediate_goal_loc[0] = intermediate_goal_loc[0]
+                self.intermediate_goal_loc[1] = intermediate_goal_loc[1]
+                last_location_update = time.time()
+
         # Continuous while loop.
+        location_prev = location
         while 1:
             # grab an image from the webcam
             ret, frame = cap.read()
@@ -221,21 +253,26 @@ class RobotActions(object):
                 motor_speed = QR_MOTOR_SPEED
 
                 # try to extract info from the QR code
+
                 location = helpers.read_floor_qr(frame)
 
-                if location is not None:
+                if location is not None and location != location_prev:
+                    location_prev = location
                     self.current_location[0] = location['location']['x']
                     self.current_location[1] = location['location']['y']
+                    print(self.current_location)
                     new_node = self.G.get_nearest(self.current_location)
-                    print("Updated location. Current node: {}".format(new_node.id))
+                    print("Updated location. Current node: {}".format(new_node))
                     print("New Path:")
-                    self.update_path(new_node.id, self.target.id)
+                    self.path = self.update_path(new_node, self.target)
+                    print(self.path)
                     path_iterator = iter(self.path)
                     intermediate_goal = next(path_iterator)
                     print("New goal: {}".format(intermediate_goal))
                     intermediate_goal_loc = self.G.get_vertex(intermediate_goal).get_location()
                     self.intermediate_goal_loc[0] = intermediate_goal_loc[0]
                     self.intermediate_goal_loc[1] = intermediate_goal_loc[1]
+                    print(self.intermediate_goal_loc)
                     last_location_update = time.time()
 
             else:
@@ -249,9 +286,12 @@ class RobotActions(object):
 
             # this logic will turn us when we are aligned with the target in the current direction.
             diff = self.intermediate_goal_loc - self.current_location
+            # print(self.current_location)
+            # print(self.intermediate_goal_loc)
+            # print(diff)
 
             # check if we have reached our goal
-            if np.max(diff) <= self.nav_thresh:
+            if np.max(np.abs(diff)) <= self.nav_thresh:
                 try:
                     intermediate_goal = next(path_iterator)
                     intermediate_goal_loc = self.G.get_vertex(intermediate_goal).get_location()
@@ -287,9 +327,8 @@ class RobotActions(object):
                 self.direction = np.inner(right_rotation, self.direction).round()
 
             else:
-                print("I'm confused. I think I need to go backwards.")
-                self.queued_trigger = self.goto_safe()
-                return
+                helpers.drive_backward(self.serial_nav, motor_speed)
+                # print("not doing anything")
 
     def on_enter_align_pallet(self):
         """

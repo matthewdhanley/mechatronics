@@ -105,8 +105,9 @@ class Graph:
         nearest_node = None
         min_distance = 10000000
         for vertex in self.vert_dict:
-            if vertex.calc_distance_from_point(location) < min_distance:
+            if self.get_vertex(vertex).calc_distance_from_point(location) < min_distance:
                 nearest_node = vertex
+                min_distance = self.get_vertex(vertex).calc_distance_from_point(location)
         return nearest_node
 
 
@@ -143,11 +144,11 @@ def dijkstra(aGraph, start):
             if new_dist < next.get_distance():
                 next.set_distance(new_dist)
                 next.set_previous(current)
-                print('updated : current = %s next = %s new_dist = %s' \
-                      % (current.get_id(), next.get_id(), next.get_distance()))
-            else:
-                print('not updated : current = %s next = %s new_dist = %s' \
-                      % (current.get_id(), next.get_id(), next.get_distance()))
+            #     print('updated : current = %s next = %s new_dist = %s' \
+            #           % (current.get_id(), next.get_id(), next.get_distance()))
+            # else:
+            #     print('not updated : current = %s next = %s new_dist = %s' \
+            #           % (current.get_id(), next.get_id(), next.get_distance()))
 
         # Rebuild heap
         # 1. Pop every item
@@ -176,29 +177,68 @@ def get_graph():
     g.add_vertex('qr14', [14., 118.5])
     g.add_vertex('qr15', [21., 127.5])
     g.add_vertex('qr16', [80., 127.5])
+    g.add_vertex('qr17', [80., 99.])
+    g.add_vertex('qr18', [76.5, 49.5])
+    # g.add_vertex('qr19', [80., 99.])
+    g.add_vertex('qr20', [66., 18.5])
+    g.add_vertex('qr21', [50.5, 18.5])
+    g.add_vertex('qr22', [46., 18.5])
+    g.add_vertex('qr23', [50.5, 41.5])
+    g.add_vertex('qr24', [66., 41.5])
+    g.add_vertex('qr25', [61., 104.5])
+    g.add_vertex('qr26', [41., 104.5])
+    g.add_vertex('qr27', [14.5, 98.])
+    g.add_vertex('qr28', [14., 78.])
+    g.add_vertex('qr29', [14., 67.5])
+    g.add_vertex('qr30', [14., 47.5])
+    g.add_vertex('qr31', [31.5, 60.5])
+    g.add_vertex('qr32', [31.5, 80.5])
+    g.add_vertex('qr33', [54., 80.5])
+    g.add_vertex('qr34', [54., 60.5])
+    g.add_vertex('qr35', [80., 119.])
+    g.add_vertex('qr36', [61., 127.5])
+    g.add_vertex('qr37', [41., 127.])
     # g.add_vertex('qr16', [80., 127.5])
 
-    # g.add_edge('qr1', 'qr2')
-    g.add_edge('qr1', 'qr3')
-    g.add_edge('qr2', 'qr6')
-    g.add_edge('qr6', 'qr7')
-    g.add_edge('qr5', 'qr7')
-    g.add_edge('qr4', 'qr5')
-    g.add_edge('qr3', 'qr4')
-    g.add_edge('qr3', 'qr4')
-    g.add_edge('qr3', 'qr13')
+    g.add_edge('qr16', 'qr36')
+    g.add_edge('qr37', 'qr36')
+    g.add_edge('qr37', 'qr15')
     g.add_edge('qr13', 'qr14')
-    # g.add_edge('qr14', 'qr15')
-    g.add_edge('qr15', 'qr16')
-    g.add_edge('qr10', 'qr16')
-    g.add_edge('qr10', 'qr11')
-    g.add_edge('qr12', 'qr11')
-    g.add_edge('qr10', 'qr9')
-    g.add_edge('qr8', 'qr9')
-    g.add_edge('qr8', 'qr7')
-    g.add_edge('qr11', 'qr5')
-    g.add_edge('qr12', 'qr4')
-    g.add_edge('qr12', 'qr13')
+    g.add_edge('qr13', 'qr27')
+    g.add_edge('qr28', 'qr27')
+    g.add_edge('qr28', 'qr29')
+    g.add_edge('qr30', 'qr29')
+    g.add_edge('qr30', 'qr3')
+    g.add_edge('qr1', 'qr3')
+    g.add_edge('qr4', 'qr3')
+    g.add_edge('qr4', 'qr31')
+    g.add_edge('qr32', 'qr31')
+    g.add_edge('qr32', 'qr12')
+    g.add_edge('qr13', 'qr12')
+    g.add_edge('qr26', 'qr12')
+    g.add_edge('qr26', 'qr11')
+    g.add_edge('qr25', 'qr11')
+    g.add_edge('qr25', 'qr10')
+    g.add_edge('qr35', 'qr10')
+    g.add_edge('qr35', 'qr16')
+    g.add_edge('qr10', 'qr17')
+    g.add_edge('qr9', 'qr17')
+    g.add_edge('qr8', 'qr18')
+    g.add_edge('qr7', 'qr18')
+    g.add_edge('qr7', 'qr24')
+    g.add_edge('qr7', 'qr24')
+    g.add_edge('qr5', 'qr24')
+    g.add_edge('qr5', 'qr34')
+    g.add_edge('qr33', 'qr34')
+    g.add_edge('qr33', 'qr11')
+    g.add_edge('qr5', 'qr23')
+    g.add_edge('qr4', 'qr23')
+    g.add_edge('qr7', 'qr29')
+    g.add_edge('qr6', 'qr29')
+    g.add_edge('qr6', 'qr21')
+    g.add_edge('qr22', 'qr21')
+    g.add_edge('qr22', 'qr2')
+
     return g
 
 

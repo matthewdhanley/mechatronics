@@ -185,7 +185,7 @@ def read_qr(show_video=False):
 
 def check_for_white(frame):
     ret, thresh1 = cv2.threshold(frame, 210, 255, cv2.THRESH_BINARY)
-    if np.sum(thresh1) > 5000000:
+    if np.sum(thresh1) > 6000000:
         return True
     else:
         return False
@@ -203,7 +203,7 @@ def read_floor_qr(frame):
     output_dict = None
 
     if barcodes is not None and len(barcodes) == 1:
-        print("I see barcode.")
+        # print("I see barcode.")
         barcode = barcodes[0]
         barcode_data = barcode.data.decode("utf-8").replace(' ', '')
 
@@ -353,7 +353,7 @@ def turn_90_left(serial_port):
     set_motor_speed(serial_port, 1, DRIVE_SPEED)
     set_motor_speed(serial_port, 2, -DRIVE_SPEED)
     print("turning...")
-    time.sleep(2.5)
+    time.sleep(2)
     stop_motors(serial_port)
 
 
@@ -362,7 +362,7 @@ def turn_90_right(serial_port):
     set_motor_speed(serial_port, 1, -DRIVE_SPEED)
     set_motor_speed(serial_port, 2, DRIVE_SPEED)
     print("turning...")
-    time.sleep(2.5)
+    time.sleep(2)
     stop_motors(serial_port)
 
 
