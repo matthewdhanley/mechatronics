@@ -60,22 +60,24 @@ def extract_floor_barcode_data(data):
     return output_dict
 
 
-def extract_goal_barcode_data(data):
+def extract_goal_barcode_data(data, racks):
     output_dict = {}
     # {pallet 104 @ rack 26, row 2, col 3} (dock A)
-    goal_data = re.match('.*{pallet\s(?P<pallet>\d*).*rack\s(?P<rack>\d*).*row\s(?P<row>\d*).*col\s(?P<col>\d*).*dock\s(?P<dock>\w).*', data)
+    print(data)
+    goal_data = re.match('.*{pallet(?P<pallet>\d*).*rack(?P<rack>\d*).*row(?P<row>\d*).*col(?P<col>\d*).*dock(?P<dock>\w).*', data)
+    print(goal_data)
     if goal_data:
         output_dict['pallet'] = goal_data.group('pallet')
         ii = 0
-        while ii < 12
+        while ii < 12:
             if racks[ii].name == goal_data.group('rack'):
-                output_dict['rack'] = ii
+                output_dict['rack'] = racks[ii]
                 break
             ii += 1
         output_dict['row'] = int(goal_data.group('row'))
         output_dict['col'] = int(goal_data.group('col'))
         output_dict['dock'] = goal_data.group('dock')
-    output_dict['time'] = time.time()
+        output_dict['time'] = time.time()
     return output_dict
 
 
@@ -87,7 +89,7 @@ def nothing(nothing):
     pass
 
 
-def read_goal_qr():
+def read_goal_qr(racks):
     """
     Parses QR Code data as formatted for the competition.
     :param vs: imutils.video.VideoStream object
@@ -114,7 +116,7 @@ def read_goal_qr():
             barcode_data = barcode.data.decode("utf-8").replace(' ', '')
 
             # Parse barcode location data
-            output_dict = extract_goal_barcode_data(barcode_data)
+            output_dict = extract_goal_barcode_data(barcode_data, racks)
 
             if output_dict:
                 qr_found = True

@@ -22,7 +22,7 @@ logging.getLogger('transitions').setLevel(logging.INFO)
 
 QR_MOTOR_SPEED = -20
 TRAVEL_MOTOR_SPEED = -50
-TURN_TIME = 4  # seconds
+TURN_TIME = 7  # seconds
 
 
 def robot_sm(test=False):
@@ -74,9 +74,10 @@ class RobotActions(object):
         self.goal_qr = {}  # to store the goal QR code
         self.intermediate_goal_loc = np.array([0, 0])  # where we want the robot to drive to
         self.current_location = np.array([0, 0])  # where we currently are. Assuming we start at 0,0
-        self.nav_thresh = 5  # threshold in inches for how close we need to be to our target.
+        self.nav_thresh = 2  # threshold in inches for how close we need to be to our target.
         self.drive_timeout = 300  # how long before we give up on driving.
         self.path = None
+        self.racks = path_planner.get_racks()
         # Set up serial interface with Arduino
         self.test = test
         self.G = path_planner.get_graph()
@@ -148,16 +149,12 @@ class RobotActions(object):
         print("Waiting for Initial QR Code.")
         begin_time = int(time.time())  # time the loop started
         while 1:
-            self.goal_qr = helpers.read_goal_qr()
+            self.goal_qr = helpers.read_goal_qr(self.racks)
 
             if self.goal_qr is not None:  # in reality, it should never be None based on the nature of the loop
                 # If we see one QR Code, store it somehow
-                self.intermediate_goal_loc[0] = self.goal_qr['goal']['x']
-                self.intermediate_goal_loc[1] = self.goal_qr['goal']['y']
-                self.target = self.G.get_nearest(self.intermediate_goal_loc)
-                self.target = 'qr2'
-
-                self.path = self.update_path('qr1', 'qr2')
+                self.target = self.goal_qr['rack'].qr1
+                self.path = self.update_path('qr1', self.goal_qr['rack'].qr1)
                 self.queued_trigger = self.drive_to_pallet()
                 # self.queued_trigger = self.align()
                 return
@@ -256,7 +253,7 @@ class RobotActions(object):
                 # path2 = self.update_path(new_node, target2)
                 # Compare path lengths
                 # Choose shorter path and record choice (qr1 or qr2)
-                self.target = racks[self.goal_qr.rack].qr1
+                # self.target = self.goal_qr.rack.qr1
                 self.path = self.update_path(new_node, self.target)
                 print(self.path)
                 path_iterator = iter(self.path)

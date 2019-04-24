@@ -274,8 +274,7 @@ if __name__ == '__main__':
     g.add_edge('qr2', 'qr6')
     g.add_edge('qr6', 'qr7')
     g.add_edge('qr5', 'qr7')
-    g.add_edge('qr4', 'qr5')
-    g.add_edge('qr3', 'qr4')
+    g.add_edge('qr4', 'qr23')
     g.add_edge('qr3', 'qr4')
     g.add_edge('qr3', 'qr13')
     g.add_edge('qr13', 'qr14')
@@ -309,74 +308,77 @@ class Rack:
     qr1 = '' # qr code from which bot drives forward
     qr2 = '' # qr code from which bot drives backward
 
-Rack racks[12]
 
-racks[0].name = '07'
-racks[0].direction = np.array([1,0])
-racks[0].qr1 = 'qr22'
-racks[0].qr2 = 'qr21'
+def get_racks():
+    racks = [Rack() for x in range(12)]
 
-racks[1].name = '57'
-racks[1].direction = np.array([-1,0])
-racks[1].qr1 = 'qr25'
-racks[1].qr2 = 'qr26'
+    racks[0].name = '07'
+    racks[0].direction = np.array([1, 0])
+    racks[0].qr1 = 'qr22'
+    racks[0].qr2 = 'qr21'
 
-racks[2].name = '46'
-racks[2].direction = np.array([1,0])
-racks[2].qr1 = 'qr37'
-racks[2].qr2 = 'qr36'
+    racks[1].name = '57'
+    racks[1].direction = np.array([-1,0])
+    racks[1].qr1 = 'qr25'
+    racks[1].qr2 = 'qr26'
 
-racks[3].name = '64'
-racks[3].direction = np.array([-1,0])
-racks[3].qr1 = 'qr36'
-racks[3].qr2 = 'qr37'
+    racks[2].name = '46'
+    racks[2].direction = np.array([1,0])
+    racks[2].qr1 = 'qr37'
+    racks[2].qr2 = 'qr36'
 
-racks[4].name = '45'
-racks[4].direction = np.array([0,-1])
-racks[4].qr1 = 'qr29'
-racks[4].qr2 = 'qr30'
+    racks[3].name = '64'
+    racks[3].direction = np.array([-1,0])
+    racks[3].qr1 = 'qr36'
+    racks[3].qr2 = 'qr37'
 
-racks[5].name = '72'
-racks[5].direction = np.array([0,-1])
-racks[5].qr1 = 'qr27'
-racks[5].qr2 = 'qr28'
+    racks[4].name = '45'
+    racks[4].direction = np.array([0,-1])
+    racks[4].qr1 = 'qr29'
+    racks[4].qr2 = 'qr30'
 
-racks[6].name = '42'
-racks[6].direction = np.array([0,1])
-racks[6].qr1 = 'qr31'
-racks[6].qr2 = 'qr32'
+    racks[5].name = '72'
+    racks[5].direction = np.array([0,-1])
+    racks[5].qr1 = 'qr27'
+    racks[5].qr2 = 'qr28'
 
-racks[7].name = '91'
-racks[7].direction = np.array([0,-1])
-racks[7].qr1 = 'qr33'
-racks[7].qr2 = 'qr34'
+    racks[6].name = '42'
+    racks[6].direction = np.array([0,1])
+    racks[6].qr1 = 'qr31'
+    racks[6].qr2 = 'qr32'
 
-racks[8].name = '80'
-racks[8].direction = np.array([1,0])
-racks[8].qr1 = 'qr23'
-racks[8].qr2 = 'qr24'
+    racks[7].name = '91'
+    racks[7].direction = np.array([0,-1])
+    racks[7].qr1 = 'qr33'
+    racks[7].qr2 = 'qr34'
 
-racks[9].name = '36'
-racks[9].direction = np.array([-1,0])
-racks[9].qr1 = 'qr20'
-racks[9].qr2 = 'qr22'
+    racks[8].name = '80'
+    racks[8].direction = np.array([1,0])
+    racks[8].qr1 = 'qr23'
+    racks[8].qr2 = 'qr24'
 
-racks[10].name = '31'
-racks[10].direction = np.array([0,1])
-racks[10].qr1 = 'qr29'
-racks[10].qr2 = 'qr18'
+    racks[9].name = '36'
+    racks[9].direction = np.array([-1,0])
+    racks[9].qr1 = 'qr20'
+    racks[9].qr2 = 'qr22'
 
-racks[11].name = '23'
-racks[11].direction = np.array([0,1])
-racks[11].qr1 = 'qr17'
-racks[11].qr2 = 'qr35'
+    racks[10].name = '31'
+    racks[10].direction = np.array([0,1])
+    racks[10].qr1 = 'qr29'
+    racks[10].qr2 = 'qr18'
 
-# other map:
-racks[8].direction = np.array([0,1])
+    racks[11].name = '23'
+    racks[11].direction = np.array([0,1])
+    racks[11].qr1 = 'qr17'
+    racks[11].qr2 = 'qr35'
 
-racks[9].direction = np.array([0,-1])
-racks[9].qr1 = 'qr29'
-racks[9].qr2 = 'qr7'
+    # other map:
+    racks[8].direction = np.array([0,1])
+
+    racks[9].direction = np.array([0,-1])
+    racks[9].qr1 = 'qr29'
+    racks[9].qr2 = 'qr7'
+    return racks
 
 # rack_loc = self.G.get_vertex(rack.qr1).get_location()
 # get path length
