@@ -225,6 +225,30 @@ class RobotActions(object):
                 self.current_location[1] = location['location']['y']
                 new_node = self.G.get_nearest(self.current_location)
                 print("Updated location. Current node: {}".format(new_node))
+
+                if new_node == 'qr1':
+                    self.direction = np.array([0, 1])
+                    print("Updated Direction")
+                elif new_node == 'qr2':
+                    self.direction = np.array([1, 0])
+                    print("Updated Direction")
+                elif new_node == 'qr14':
+                    self.direction = np.array([0, -1])
+                    print("Updated Direction")
+                elif new_node == 'qr15':
+                    self.direction = np.array([1, 0])
+                    print("Updated Direction")
+                elif new_node == 'qr9':
+                    self.direction = np.array([0, 1])
+                    print("Updated Direction")
+                elif new_node == 'qr8':
+                    print("Updated Direction")
+                    self.direction = np.array([0, -1])
+                else:
+                    print("Cannot determine direction.")
+                    location = None
+                    continue
+
                 print("Updated Path:")
                 self.path = self.update_path(new_node, self.target)
                 print(self.path)
@@ -340,7 +364,7 @@ class RobotActions(object):
         # # x val neeeded to be centered
         x_center = 103
         while 1:
-            qr_codes = helpers.read_qr(vs, show_video=True)
+            qr_codes = helpers.read_qr(vs)
             if qr_codes is not None and len(qr_codes) == 1:
                 print(qr_codes[0]['frame_location'][0])
                 x_error = qr_codes[0]['frame_location'][0] - x_center

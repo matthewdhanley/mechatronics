@@ -335,10 +335,10 @@ def drive_forward_slow(serial_port):
     return
 
 
-def drive_backward(serial_port):
+def drive_backward(serial_port, speed):
     # print("driving forward")
-    set_motor_speed(serial_port, 1, -DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, -DRIVE_SPEED)
+    set_motor_speed(serial_port, 1, -speed)
+    set_motor_speed(serial_port, 2, -speed)
     return
 
 
@@ -350,19 +350,19 @@ def stop_motors(serial_port):
 
 def turn_90_left(serial_port):
     # print("turning left")
-    set_motor_speed(serial_port, 1, DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, -DRIVE_SPEED)
+    set_motor_speed(serial_port, 6, 0)
+    # set_motor_speed(serial_port, 5, 0)
     print("turning...")
-    time.sleep(2)
+    time.sleep(7)
     stop_motors(serial_port)
 
 
 def turn_90_right(serial_port):
     # print("turning right")
-    set_motor_speed(serial_port, 1, -DRIVE_SPEED)
-    set_motor_speed(serial_port, 2, DRIVE_SPEED)
+    set_motor_speed(serial_port, 5, 0)
+    # set_motor_speed(serial_port, 6, 0)
     print("turning...")
-    time.sleep(2)
+    time.sleep(7)
     stop_motors(serial_port)
 
 

@@ -198,6 +198,9 @@ def get_graph():
     g.add_vertex('qr35', [80., 119.])
     g.add_vertex('qr36', [61., 127.5])
     g.add_vertex('qr37', [41., 127.])
+    # g.add_vertex('a', [9.5, 8.])
+    # g.add_vertex('b', [88., 71.5])
+    # g.add_vertex('c', [9.5, 133.5])
     # g.add_vertex('qr16', [80., 127.5])
 
     g.add_edge('qr16', 'qr36')
@@ -238,6 +241,9 @@ def get_graph():
     g.add_edge('qr6', 'qr21')
     g.add_edge('qr22', 'qr21')
     g.add_edge('qr22', 'qr2')
+    # g.add_edge('qr8', 'b')
+    # g.add_edge('qr15', 'c')
+    # g.add_edge('qr1', 'c')
 
     return g
 
@@ -273,7 +279,6 @@ if __name__ == '__main__':
     g.add_edge('qr3', 'qr4')
     g.add_edge('qr3', 'qr13')
     g.add_edge('qr13', 'qr14')
-    # g.add_edge('qr14', 'qr15')
     g.add_edge('qr15', 'qr16')
     g.add_edge('qr10', 'qr16')
     g.add_edge('qr10', 'qr11')
