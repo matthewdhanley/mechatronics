@@ -119,6 +119,8 @@ void setup()
 
   stop_motors();
 
+  // The imu needs to be called a few times to be setup right
+  // Unsure why but we need to leave this here
   imusetup();
   imusetup();
   imusetup();
@@ -159,7 +161,7 @@ void read_tape_sensors(){
   tape_sensors.front = (float)proximityADC3 * 5.0 / 1023.0;    
 
   Serial.println(tape_sensors.front);
-//  Serial.println(proximityADC3);
+
   tape_sensors_prev.left = tape_sensors.left;
   tape_sensors_prev.right = tape_sensors.right; // Twisty Wire
   tape_sensors_prev.front = tape_sensors.front;
@@ -220,10 +222,9 @@ void turn_90right()
   delay(100);
   sensors_event_t event;
   bno.getEvent(&event);
-//  float heading  = wrapdeg( (float)event.orientation.x);
+
   float heading  = (float)event.orientation.x;
 
-//  Serial.println(heading);
   while (heading < 85)
   {
     bno.getEvent(&event);
@@ -262,7 +263,6 @@ float wrapdeg(float val)
   val = (double)val;
   if (val > 180)
   {  val -= 360;
-//    val = -val;
   }
   return (float)val;
 }
@@ -276,14 +276,6 @@ void test()
   {
     bno.getEvent(&event);
   
-//    Serial.print(F("Orientation: "));
-//    Serial.print((float)event.orientation.x);
-//    Serial.print(F(" "));
-//    Serial.print((float)event.orientation.y);
-//    Serial.print(F(" "));
-//    Serial.print((float)event.orientation.z);
-//    Serial.println(F(""));
-//    delay(300);
   }
     
 }
@@ -295,15 +287,7 @@ void imusetup()
 
   for (int i = 0; i <100; i++)
   {
-    bno.getEvent(&event);
-  
-//    Serial.print(F("Orientation: "));
-//    Serial.print((float)event.orientation.x);
-//    Serial.print(F(" "));
-//    Serial.print((float)event.orientation.y);
-//    Serial.print(F(" "));
-//    Serial.print((float)event.orientation.z);
-//    Serial.println(F(""));
+    bno.getEvent(&event);  
   }
     
 }
@@ -318,15 +302,16 @@ void loop()
     delay(100);
     stop_motors();
     
-//    Serial.println("left");
    }
    if (tape_sensors.left > v_thresh && tape_sensors.right <= v_thresh){
     turn_left();
     delay(100);
     stop_motors();
-//    Serial.println("right");
    }
 
+  // Look for Serial command from Pi
   get_command_motor();
+
+  // Drive motors to new speeds
   drive_motor();
 }
