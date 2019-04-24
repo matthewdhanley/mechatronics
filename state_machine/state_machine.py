@@ -371,7 +371,9 @@ class RobotActions(object):
         while(1):
             pallet_qr = helpers.read_pallet_qr()
             if pallet_qr.pallet == self.goal_qr.pallet:
+                print("right pallet")
                 break
+            print("wrong pallet")
         self.queued_trigger = self.align()
         return
     
