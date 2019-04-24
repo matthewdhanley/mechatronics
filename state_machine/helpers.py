@@ -61,9 +61,21 @@ def extract_floor_barcode_data(data):
 
 
 def extract_goal_barcode_data(data):
-    output_dict = {'goal': {}}
-    output_dict['goal']['x'] = 100.0
-    output_dict['goal']['y'] = 200.0
+    output_dict = {}
+    # {pallet 104 @ rack 26, row 2, col 3} (dock A)
+    goal_data = re.match('.*{pallet\s(?P<pallet>\d*).*rack\s(?P<rack>\d*).*row\s(?P<row>\d*).*col\s(?P<col>\d*).*dock\s(?P<dock>\w).*', data)
+    if goal_data:
+        output_dict['pallet'] = goal_data.group('pallet')
+        ii = 0
+        while ii < 12
+            if racks[ii].name == goal_data.group('rack'):
+                output_dict['rack'] = ii
+                break
+            ii += 1
+        output_dict['row'] = int(goal_data.group('row'))
+        output_dict['col'] = int(goal_data.group('col'))
+        output_dict['dock'] = goal_data.group('dock')
+    output_dict['time'] = time.time()
     return output_dict
 
 
