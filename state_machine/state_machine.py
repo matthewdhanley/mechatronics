@@ -309,7 +309,7 @@ class RobotActions(object):
                     print("New intermediate goal: {}".format(intermediate_goal))
                 except StopIteration:
                     print("I did it!")
-                    self.queued_trigger = self.align()
+                    self.queued_trigger = self.align_rack()
                     return
 
             if np.dot(diff, self.direction) > self.nav_thresh:
@@ -337,7 +337,44 @@ class RobotActions(object):
             else:
                 helpers.drive_backward(self.serial_nav, motor_speed)
                 # print("not doing anything")
+                
+    def on_enter_align_rack(self):
+        print("Aligning to rack")
+        rack_dir = racks[self.goal_qr.rack].direction
+        while(1):
+            if np.dot(rack_dir, self.direction) > self.nav_thresh:
+                if direction != 'forward':
+                    direction = 'forward'
+                    print("going forward")
+                helpers.drive_forward(self.serial_nav, motor_speed)
+                break
 
+            elif np.dot(rack_dir, np.inner(left_rotation, self.direction).round()) > 0:
+                if direction != 'left':
+                    direction = 'left'
+                    print("going left")
+                helpers.turn_90_left(self.serial_nav)
+                self.direction = np.inner(left_rotation, self.direction).round()
+
+            elif np.dot(diff, np.inner(right_rotation, self.direction).round()) > 0:
+                if direction != 'right':
+                    direction = 'right'
+                    print("going right")
+                helpers.turn_90_right(self.serial_nav)
+                self.direction = np.inner(right_rotation, self.direction).round()
+
+            else:
+                print("turning around")
+                helpers.turn_90_right(self.serial_nav)
+                self.direction = np.inner(right_rotation, self.direction).round()
+        # align height
+        while(1):
+            pallet_qr = helpers.read_pallet_qr()
+            if pallet_qr.pallet == self.goal_qr.pallet:
+                break
+        self.queued_trigger = self.align()
+        return
+    
     def on_enter_align_pallet(self):
         """
         align robot with pallet
