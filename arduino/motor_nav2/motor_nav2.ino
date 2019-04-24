@@ -39,6 +39,16 @@ Developed with ROB-9457
 #define LIN_SERVO = 2
 #define VERT_SERVO = 3
 
+
+// Libraries for Adafruit BNO055 IMU:
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+
+#define BNO055_SAMPLERATE_DELAY_MS (100)
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
 // The absolute maximum this value can be is 250. 100 is a speed it won't
 // get away from us.
 const int max_speed = -100.0;
@@ -48,14 +58,18 @@ const int offsetA    = 1;
 const int offsetB    = 1;
 const int TAPE1_PIN  = A1; // Sensor output voltage
 const int TAPE2_PIN  = A0; // Sensor output voltage
+const int TAPE3_PIN  = A2; // Sensor output voltage
+
 int proximityADC1    = 0;
 int proximityADC2    = 0;
+int proximityADC3    = 0;
 float v_thresh       = 3.0;  // threshold for seeing tape
 
 
 struct tape_proximity{
   int left = 0;
   int right = 0;
+  int front = 0;
 };
 
 tape_proximity tape_sensors;
@@ -83,9 +97,35 @@ void setup()
   Serial.begin(9600);
   pinMode(TAPE1_PIN, INPUT);
   pinMode(TAPE2_PIN, INPUT);
+  pinMode(TAPE3_PIN, INPUT);
 //  Serial.println("Starting...")/;
   cur_motor_cmd1.motor_speed = 0;
   cur_motor_cmd2.motor_speed = 0;
+
+
+  // setup imu:
+  /* Initialise the sensor */
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+   
+  delay(1000);
+
+  /* Use external crystal for better accuracy */
+  bno.setExtCrystalUse(true);
+
+  stop_motors();
+
+  // The imu needs to be called a few times to be setup right
+  // Unsure why but we need to leave this here
+  imusetup();
+  imusetup();
+  imusetup();
+  imusetup();
+  
 }
 
 void go_straight(){
@@ -93,14 +133,14 @@ void go_straight(){
   motor2.drive(max_speed);
 }
 
-void turn_left(){
-  motor1.drive(-max_speed);
-  motor2.drive(max_speed);
+void turn_right(){
+  motor1.drive(40);
+  motor2.drive(-40);
 }
 
-void turn_right(){
-  motor1.drive(max_speed);
-  motor2.drive(-max_speed);
+void turn_left(){
+  motor1.drive(-40);
+  motor2.drive(40);
 }
 
 void stop_motors(){
@@ -116,29 +156,35 @@ void read_tape_sensors(){
   proximityADC2 = analogRead(TAPE2_PIN);
   tape_sensors.right = (float)proximityADC2 * 5.0 / 1023.0;    
 
+  proximityADC3 = analogRead(TAPE3_PIN);
+  proximityADC3 = proximityADC3 - 100;
+  tape_sensors.front = (float)proximityADC3 * 5.0 / 1023.0;    
+
+  Serial.println(tape_sensors.front);
+
   tape_sensors_prev.left = tape_sensors.left;
   tape_sensors_prev.right = tape_sensors.right; // Twisty Wire
+  tape_sensors_prev.front = tape_sensors.front;
 }
 
 
 
 void get_command_motor()
-{  
+{
+
+  // Get motor navigation command from raspberry pi:
   if (Serial.available() > 0) {
+    
     int id = Serial.parseInt();
     // check to make sure its id not a speed:
-    while(id > 4 || id <=0)
+    while(id > 10 || id <-4)
     {
       id = Serial.parseInt();
       Serial.println(id);    
     }
     Serial.println(id);
-//
-//    while (Serial.available() == 0){
-//        delay(1);
-//    }
-  
-  if (Serial.available() > 0){
+    
+    if (Serial.available() > 0) {
       int motor_speed = Serial.parseInt();
         switch (id)
         {
@@ -148,14 +194,19 @@ void get_command_motor()
           case 2:  
             cur_motor_cmd2.motor_speed = motor_speed;
             break;
+          case 5:
+            turn_90right();
+            break;
+          case 6:
+            turn_90left();
+            break;
           default:
             break;
         }
-        Serial.println(motor_speed);
-    }
-  
+        Serial.println(motor_speed);        
   }
-}
+  }
+} 
 
 void drive_motor()
 {
@@ -164,30 +215,103 @@ void drive_motor()
   motor2.drive(cur_motor_cmd2.motor_speed);
 
 }
+
+void turn_90right()
+{
+  bno.begin();
+  delay(100);
+  sensors_event_t event;
+  bno.getEvent(&event);
+
+  float heading  = (float)event.orientation.x;
+
+  while (heading < 85)
+  {
+    bno.getEvent(&event);
+    heading = wrapdeg( (float)event.orientation.x);
+    turn_right();
+    delay(100);
+    stop_motors();  
+    
+  }
+    
+}
+
+void turn_90left()
+{
+  bno.begin();
+  delay(100);
+  sensors_event_t event;
+  bno.getEvent(&event);
+
+  float heading  = wrapdeg( (float)event.orientation.x);
+  
+   while (heading > -85)
+  {
+    bno.getEvent(&event);
+    heading = wrapdeg( (float)event.orientation.x);
+    turn_left();
+    delay(100);
+    stop_motors();
+    
+  }
+    
+}
+
+float wrapdeg(float val)
+{
+  val = (double)val;
+  if (val > 180)
+  {  val -= 360;
+  }
+  return (float)val;
+}
+void test()
+{
+  /* Get a new sensor event */
+  bno.begin();
+  sensors_event_t event;
+
+  for (int i = 0; i <10000; i++)
+  {
+    bno.getEvent(&event);
+  
+  }
+    
+}
+void imusetup()
+{
+  /* Get a new sensor event */
+  bno.begin();
+  sensors_event_t event;
+
+  for (int i = 0; i <100; i++)
+  {
+    bno.getEvent(&event);  
+  }
+    
+}
+
 void loop()
 {
-//   read_tape_sensors(); // loads tape sensor values to proximity V1 and proximity V2
-//   if (tape_sensors.left > v_thresh && tape_sensors.right > v_thresh){
-//    go_straight();
-//    Serial.println("straight");
-//   }
-//   else if (tape_sensors.left <= v_thresh && tape_sensors.right > v_thresh){
-//    turn_left();
-//    Serial.println("left");
-//   }
-//   else if (tape_sensors.left > v_thresh && tape_sensors.right <= v_thresh){
-//    turn_right();
-//    Serial.println("right");
-//   }
-//   else{
-//    stop_motors();
-//   }
 
+//   Tape Sensors:
+   read_tape_sensors(); // loads tape sensor values to proximity V1 and proximity V2
+   if (tape_sensors.left <= v_thresh && tape_sensors.right > v_thresh){
+    turn_right();
+    delay(100);
+    stop_motors();
+    
+   }
+   if (tape_sensors.left > v_thresh && tape_sensors.right <= v_thresh){
+    turn_left();
+    delay(100);
+    stop_motors();
+   }
+
+  // Look for Serial command from Pi
   get_command_motor();
+
+  // Drive motors to new speeds
   drive_motor();
-//  motor1.drive(max/_speed);
-//  motor2.drive(max_speed);
-      
-  delay(100);
-   
 }

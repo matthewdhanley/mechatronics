@@ -372,13 +372,14 @@ def get_racks():
     racks[11].qr1 = 'qr17'
     racks[11].qr2 = 'qr35'
 
-    # other map:
-    racks[8].direction = np.array([0,1])
-
-    racks[9].direction = np.array([0,-1])
-    racks[9].qr1 = 'qr29'
-    racks[9].qr2 = 'qr7'
+    # # other map:
+    # racks[8].direction = np.array([0,1])
+    #
+    # racks[9].direction = np.array([0,-1])
+    # racks[9].qr1 = 'qr29'
+    # racks[9].qr2 = 'qr7'
     return racks
+
 
 # rack_loc = self.G.get_vertex(rack.qr1).get_location()
 # get path length
