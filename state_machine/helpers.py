@@ -63,7 +63,7 @@ def extract_floor_barcode_data(data):
 def extract_goal_barcode_data(data):
     output_dict = {}
     # {pallet 104 @ rack 26, row 2, col 3} (dock A)
-    goal_data = re.match('.*{pallet\s(?P<pallet>\d*).*rack\s(?P<rack>\d*).*row\s(?P<row>\d*).*col\s(?P<col>\d*).*dock\s(?P<dock>\w).*', data)
+    goal_data = re.match('.*pallet\s(?P<pallet>\d*).*rack\s(?P<rack>\d*).*row\s(?P<row>\d*).*col\s(?P<col>\d*).*dock\s(?P<dock>\w).*', data)
     if goal_data:
         output_dict['pallet'] = goal_data.group('pallet')
         ii = 0
@@ -194,6 +194,52 @@ def read_qr(show_video=False):
             cv2.destroyAllWindows()
             exit(0)
 
+def extract_pallet_barcode_data(data):
+    output_dict = {}
+    # /pallet 056\
+    pallet_data = re.match('.*pallet\s(?P<pallet>\d*).*', data)
+    if goal_data:
+        output_dict['pallet'] = pallet_data.group('pallet')
+    output_dict['time'] = time.time()
+    return output_dict
+
+def read_pallet_qr():
+    """
+    Parses QR Code data as formatted for the competition.
+    :param vs: imutils.video.VideoStream object
+    :param show_video: set to True to have a live stream pop up.
+    :return: Array of QR code dictionaries.
+    """
+
+    vs = get_camera()
+
+    # cap.set(15, contrast)
+    frame = vs.read()
+    qr_found = False
+    output_dict = None
+    while not qr_found:
+        frame = vs.read()
+        frame = imutils.resize(frame, width=400)
+        try:
+            barcodes = pyzbar.decode(frame)
+        except TypeError:
+            continue
+
+        if barcodes is not None and len(barcodes) == 1:
+            barcode = barcodes[0]
+            barcode_data = barcode.data.decode("utf-8").replace(' ', '')
+
+            # Parse barcode location data
+            output_dict = extract_pallet_barcode_data(barcode_data)
+
+            if output_dict:
+                qr_found = True
+
+    try:
+        vs.stream.stop()
+    except AttributeError:
+        vs.stream.release()
+    return output_dict
 
 def check_for_white(frame):
     ret, thresh1 = cv2.threshold(frame, 210, 255, cv2.THRESH_BINARY)
