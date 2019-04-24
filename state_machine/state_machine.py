@@ -31,7 +31,7 @@ def robot_sm(test=False):
     :return: state machine object
     """
     # Different states the robot can be in. Add whatever we need -------------------------------------------------------
-    states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet']
+    states = ['startup', 'determine_target', 'safe', 'navigation', 'align_pallet', 'pickup_pallet', 'align_rack']
 
     # The state machine is initialized with methods defined in the RobotActions class found below.
     robot = RobotActions(test=test)
@@ -49,6 +49,7 @@ def robot_sm(test=False):
     machine.add_transition('drive_to_dropoff', source='*', dest='navigation')
     machine.add_transition('pickup', source='*', dest='pickup_pallet')
     machine.add_transition('align', source='*', dest='align_pallet')
+    machine.add_transition('align_rack', source='*', dest='align_rack')
 
     return robot
 
