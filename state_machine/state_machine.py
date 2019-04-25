@@ -82,6 +82,9 @@ class RobotActions(object):
         # Set up serial interface with Arduino
         self.test = test
         self.G = path_planner.get_graph()
+
+        self.left_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
+        self.right_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
         if not self.test:
             self.serial_nav = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)  #change ACM number as found from ls /dev/tty/ACM*
             self.serial_nav.baudrate =9600
@@ -172,8 +175,7 @@ class RobotActions(object):
         """
         time.sleep(3)
         # ROTATION MATRICES
-        left_rotation = np.array([[np.cos(np.pi/2), -np.sin(np.pi/2)], [np.sin(np.pi/2), np.cos(np.pi/2)]])
-        right_rotation = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2)], [np.sin(-np.pi/2), np.cos(-np.pi/2)]])
+
 
         # Get webcam stream
         try:
@@ -242,6 +244,8 @@ class RobotActions(object):
                 elif new_node == 'qr8':
                     print("Updated Direction")
                     self.direction = np.array([0, -1])
+                elif new_node == 'qr4':
+                    self.direction = np.array([-1, 0])
                 else:
                     print("Cannot determine direction.")
                     location = None
@@ -339,55 +343,45 @@ class RobotActions(object):
                     print("going forward")
                 helpers.drive_forward(self.serial_nav, motor_speed)
 
-            elif np.dot(diff, np.inner(left_rotation, self.direction).round()) > 0:
+            elif np.dot(diff, np.inner(self.left_rotation, self.direction).round()) > 0:
                 if direction != 'left':
                     direction = 'left'
                     print("going left")
                 time.sleep(TURN_TIME)
                 helpers.turn_90_left(self.serial_nav)
-                self.direction = np.inner(left_rotation, self.direction).round()
+                self.direction = np.inner(self.left_rotation, self.direction).round()
 
-            elif np.dot(diff, np.inner(right_rotation, self.direction).round()) > 0:
+            elif np.dot(diff, np.inner(self.right_rotation, self.direction).round()) > 0:
                 if direction != 'right':
                     direction = 'right'
                     print("going right")
                 time.sleep(TURN_TIME)
                 helpers.turn_90_right(self.serial_nav)
-                self.direction = np.inner(right_rotation, self.direction).round()
+                self.direction = np.inner(self.right_rotation, self.direction).round()
 
             else:
                 helpers.drive_backward(self.serial_nav, motor_speed)
                 # print("not doing anything")
                 
     def on_enter_align_rack(self):
+        direction = ''
         print("Aligning to rack")
-        rack_dir = racks[self.goal_qr.rack].direction
-        while(1):
-            if np.dot(rack_dir, self.direction) > self.nav_thresh:
-                if direction != 'forward':
-                    direction = 'forward'
-                    print("going forward")
-                helpers.drive_forward(self.serial_nav, motor_speed)
-                break
+        rack_dir = self.goal_qr['rack'].direction
+        if np.dot(rack_dir, self.direction) == 1:
+            if direction != 'forward':
+                print("Correct orientation")
+            helpers.drive_forward(self.serial_nav, QR_MOTOR_SPEED)
 
-            elif np.dot(rack_dir, np.inner(left_rotation, self.direction).round()) > 0:
-                if direction != 'left':
-                    direction = 'left'
-                    print("going left")
-                helpers.turn_90_left(self.serial_nav)
-                self.direction = np.inner(left_rotation, self.direction).round()
+        elif np.dot(rack_dir, self.direction) == -1:
+            print("turning 180")
+            helpers.turn_90_left(self.serial_nav)
+            helpers.turn_90_left(self.serial_nav)
+            self.direction = self.goal_qr['rack'].direction
 
-            elif np.dot(diff, np.inner(right_rotation, self.direction).round()) > 0:
-                if direction != 'right':
-                    direction = 'right'
-                    print("going right")
-                helpers.turn_90_right(self.serial_nav)
-                self.direction = np.inner(right_rotation, self.direction).round()
-
-            else:
-                print("turning around")
-                helpers.turn_90_right(self.serial_nav)
-                self.direction = np.inner(right_rotation, self.direction).round()
+        else:
+            print("this isn't right...")
+            self.queued_trigger = self.safe()
+            return
         # align height
         while(1):
             pallet_qr = helpers.read_pallet_qr()

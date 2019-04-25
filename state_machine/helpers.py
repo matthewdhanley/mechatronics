@@ -18,6 +18,8 @@ with np.load(os.path.abspath(os.path.join(os.path.dirname(__file__), 'camera_cal
     MTX, DIST, _, _ = [X[i] for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
 
 DRIVE_SPEED = -80
+WHITE_THRESH = 7000000
+
 
 def get_camera():
     """
@@ -243,7 +245,8 @@ def read_pallet_qr():
 
 def check_for_white(frame):
     ret, thresh1 = cv2.threshold(frame, 210, 255, cv2.THRESH_BINARY)
-    if np.sum(thresh1) > 6000000:
+    print(np.sum(thresh1))
+    if np.sum(thresh1) > WHITE_THRESH:
         return True
     else:
         return False

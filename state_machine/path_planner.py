@@ -333,7 +333,7 @@ def get_racks():
     racks[3].qr2 = 'qr37'
 
     racks[4].name = '45'
-    racks[4].direction = np.array([0,-1])
+    racks[4].direction = np.array([0, -1])
     racks[4].qr1 = 'qr29'
     racks[4].qr2 = 'qr30'
 
