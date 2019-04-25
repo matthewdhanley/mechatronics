@@ -200,7 +200,7 @@ def extract_pallet_barcode_data(data):
     output_dict = {}
     # /pallet 056\
     pallet_data = re.match('.*pallet\s(?P<pallet>\d*).*', data)
-    if goal_data:
+    if pallet_data:
         output_dict['pallet'] = pallet_data.group('pallet')
     output_dict['time'] = time.time()
     return output_dict
