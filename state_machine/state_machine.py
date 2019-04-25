@@ -252,6 +252,7 @@ class RobotActions(object):
                     continue
 
                 print("Updated Path:")
+		# no good because robot cant drive backwards because of tape sensors
                 # target1 = racks[self.goal_qr.rack].qr1
                 # path1 = self.update_path(new_node, target1)
                 # target2 = racks[self.goal_qr.rack].qr2
@@ -363,14 +364,18 @@ class RobotActions(object):
                 helpers.drive_backward(self.serial_nav, motor_speed)
                 # print("not doing anything")
                 
-    def on_enter_align_rack(self):
+def on_enter_align_rack(self):
         direction = ''
         print("Aligning to rack")
         rack_dir = self.goal_qr['rack'].direction
+        
+        # Center on rack qr for rotation
+        helpers.drive_forward(self.serial_nav, QR_MOTOR_SPEED)
+        time.sleep(7)
+        
         if np.dot(rack_dir, self.direction) == 1:
             if direction != 'forward':
                 print("Correct orientation")
-            helpers.drive_forward(self.serial_nav, QR_MOTOR_SPEED)
 
         elif np.dot(rack_dir, self.direction) == -1:
             print("turning 180")
@@ -385,11 +390,11 @@ class RobotActions(object):
         # align height
         while(1):
             pallet_qr = helpers.read_pallet_qr()
-	    print pallet_qr
             if pallet_qr['pallet'] == self.goal_qr['pallet']:
                 print("right pallet")
                 break
             print("wrong pallet")
+        helpers.drive_forward(self.serial_nav, QR_MOTOR_SPEED)
         self.queued_trigger = self.align()
         return
     
