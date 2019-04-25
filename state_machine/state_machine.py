@@ -385,7 +385,7 @@ class RobotActions(object):
         # align height
         while(1):
             pallet_qr = helpers.read_pallet_qr()
-	    print pallet_qr
+            print pallet_qr
             if pallet_qr['pallet'] == self.goal_qr['pallet']:
                 print("right pallet")
                 break
@@ -399,11 +399,12 @@ class RobotActions(object):
         command gripper to pick it up
         """
         print("Aligning Robot")
-        vs = helpers.get_camera()
         # # x val neeeded to be centered
         x_center = 103
         while 1:
-            qr_codes = helpers.read_qr(vs)
+            print("Reading pallet qr....?")
+            qr_codes = helpers.read_pallet_qr()
+            print qr_codes
             if qr_codes is not None and len(qr_codes) == 1:
                 print(qr_codes[0]['frame_location'][0])
                 x_error = qr_codes[0]['frame_location'][0] - x_center
