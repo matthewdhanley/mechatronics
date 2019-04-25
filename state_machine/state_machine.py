@@ -431,12 +431,21 @@ class RobotActions(object):
 
         # horizontal actuator
         # +100 = forward
+        HORIZ_MOTOR     = 3
+        VERTICAL_MOTOR  = 4
+
         time.sleep(5)
         print("Forward")
-        helpers.set_motor_speed(self.serial_grip, 3, 450)
-
-
+        helpers.set_motor_speed(self.serial_grip, HORIZ_MOTOR, 600)
+        time.sleep(10)
+        helpers.set_motor_speed(self.serial_grip, VERTICAL_MOTOR, 3500)
         time.sleep(60)
+        helpers.set_motor_speed(self.serial_grip, HORIZ_MOTOR, -600)
+        time.sleep(10)
+        helpers.set_motor_speed(self.serial_grip, VERTICAL_MOTOR, 3500)
+        time.sleep(60)
+
+
 
         # time.sleep(5)
         # # veritcal actuator

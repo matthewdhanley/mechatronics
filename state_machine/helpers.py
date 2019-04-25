@@ -360,8 +360,8 @@ def set_motor_speed(serial_port, id, speed):
 
 def nudge_right(serial_port):
     # move forward
-    set_motor_speed(serial_port, 1, 100)
-    set_motor_speed(serial_port, 2, 100)
+    set_motor_speed(serial_port, 1, 50)
+    set_motor_speed(serial_port, 2, 50)
     time.sleep(.05)
 
     # stop motors
@@ -372,8 +372,8 @@ def nudge_right(serial_port):
 
 def nudge_left(serial_port):
     # move backwards
-    set_motor_speed(serial_port, 1, -100)
-    set_motor_speed(serial_port, 2, -100)
+    set_motor_speed(serial_port, 1, -50)
+    set_motor_speed(serial_port, 2, -50)
     time.sleep(.05)
 
     # stop motors

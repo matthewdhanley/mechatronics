@@ -2,17 +2,17 @@
 ******************************************************************************/
 
 // Pins for all input
-int DIR2   = 2; //define Direction pin
-int PUL2   = 3; //define Pulse pin
+int DIR2  = 2; //define Direction pin
+int PUL2  = 3; //define Pulse pin
 
-int DIR  = 4; //define Direction pin
-int PUL  = 5; //define Pulse pin
+int DIR   = 4; //define Direction pin
+int PUL   = 5; //define Pulse pin
 int ENA   = 7; //define Enable Pin
 
 //Motor Command from raspberry pi:
 struct motor_command {
    int id;
-   int motor_speed; // Steps
+   int motor_steps; // Steps
 };
 
 struct motor_command cur_motor_cmd3; // Horizontal
@@ -33,8 +33,8 @@ void setup()
   pinMode (DIR2, OUTPUT);
 
   // Set initial speed to 0
-  cur_motor_cmd3.motor_speed = 0;
-  cur_motor_cmd4.motor_speed = 0;
+  cur_motor_cmd3.motor_steps = 0;
+  cur_motor_cmd4.motor_steps = 0;
 }
 
 void horizontal_forward(int forward_maxstep){
@@ -102,53 +102,37 @@ void get_command_motor()
     Serial.println(id);
     
     if (Serial.available() > 0) {
-      int motor_speed = Serial.parseInt();
+      int motor_steps = Serial.parseInt();
         switch (id)
         {
           // Horizontal Actuator
           case 3:
-            cur_motor_cmd3.motor_speed = motor_speed;
-            if (cur_motor_cmd3.motor_speed > 10)
+            cur_motor_cmd3.motor_steps = motor_steps;
+            if (cur_motor_cmd3.motor_steps > 10)
             {
-              horizontal_forward(400);
-              vertical_up(600);
-              horizontal_backward(400);
-              vertical_down(6000);
-              horizontal_forward(400);
-              vertical_up(6000);
-              horizontal_backward(400);
-              vertical_down(6000);
-              vertical_up(100);
+              horizontal_forward(cur_motor_cmd3.motor_steps);              
             }
-            else if (cur_motor_cmd3.motor_speed < -10)
+            if (cur_motor_cmd3.motor_steps < -10)
             {
-              horizontal_backward(cur_motor_cmd3.motor_speed);  
-            }
-            else
-            {
-              //do nothing
+              horizontal_backward(cur_motor_cmd3.motor_steps);  
             }
             break;
           // Vertical Actuator
           case 4:  
-            cur_motor_cmd4.motor_speed = motor_speed;
-            if (cur_motor_cmd4.motor_speed > 10)
+            cur_motor_cmd4.motor_steps = motor_steps;
+            if (cur_motor_cmd4.motor_steps > 10)
             {
-              vertical_up(cur_motor_cmd4.motor_speed);
+              vertical_up(cur_motor_cmd4.motor_steps);
             }
-            else if (cur_motor_cmd4.motor_speed < -10)
+            if (cur_motor_cmd4.motor_steps < -10)
             {
-              vertical_down(cur_motor_cmd4.motor_speed);  
-            }
-            else
-            {
-              //do nothing
+              vertical_down(cur_motor_cmd4.motor_steps);  
             }
             break;
           default:
             break;
         }
-        Serial.println(motor_speed);        
+        Serial.println(motor_steps);        
       
     }
   
@@ -158,25 +142,21 @@ void get_command_motor()
 
 void loop()
 {
-  delay(5000);
-//  horizontal_forward(550);
-//  vertical_up(5250);
-//  horizontal_backward(550);
-//  vertical_down(5250);
-//  vertical_up(5000);
-//  vertical_down(5000);
-//  horizontal_forward(400);
-//  vertical_up(6000);
-//  horizontal_backward(400);
-//  vertical_down(6000);
-//  vertical_up(100);  
 
-//  get_command_motor();
-//  delay(5000);
-//  horizontal_forward(450);
-//  vertical_up(8000);
-//  horizontal_backward(450);
-//  vertical_down(7000);
   delay(5000);
+  // Testing Pickup:
+  // First row:
+  vertical_up(13000); // 2nd row
+  horizontal_forward(600);
+  vertical_up(3500);
+  horizontal_backward(600);
+  vertical_down(13000);
+  vertical_down(3500);
+
+//  horizontal_forward(600);
+//  vertical_up(3500);
+//  horizontal_backward(600);
+//  vertical_down(3500);
+
    
 }
