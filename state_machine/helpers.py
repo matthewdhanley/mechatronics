@@ -199,7 +199,8 @@ def read_qr(show_video=False):
 def extract_pallet_barcode_data(data):
     output_dict = {}
     # /pallet 056\
-    pallet_data = re.match('.*pallet\s(?P<pallet>\d*).*', data)
+    print data
+    pallet_data = re.match('.*pallet(?P<pallet>\d*).*', data)
     if pallet_data:
         output_dict['pallet'] = pallet_data.group('pallet')
     output_dict['time'] = time.time()
@@ -360,8 +361,8 @@ def set_motor_speed(serial_port, id, speed):
 
 def nudge_right(serial_port):
     # move forward
-    set_motor_speed(serial_port, 1, 50)
-    set_motor_speed(serial_port, 2, 50)
+    set_motor_speed(serial_port, 1, 100)
+    set_motor_speed(serial_port, 2, 100)
     time.sleep(.05)
 
     # stop motors
@@ -372,8 +373,8 @@ def nudge_right(serial_port):
 
 def nudge_left(serial_port):
     # move backwards
-    set_motor_speed(serial_port, 1, -50)
-    set_motor_speed(serial_port, 2, -50)
+    set_motor_speed(serial_port, 1, -100)
+    set_motor_speed(serial_port, 2, -100)
     time.sleep(.05)
 
     # stop motors

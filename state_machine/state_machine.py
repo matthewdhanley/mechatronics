@@ -385,6 +385,7 @@ class RobotActions(object):
         # align height
         while(1):
             pallet_qr = helpers.read_pallet_qr()
+	    print pallet_qr
             if pallet_qr['pallet'] == self.goal_qr['pallet']:
                 print("right pallet")
                 break
@@ -444,8 +445,6 @@ class RobotActions(object):
         time.sleep(10)
         helpers.set_motor_speed(self.serial_grip, VERTICAL_MOTOR, 3500)
         time.sleep(60)
-
-
 
         # time.sleep(5)
         # # veritcal actuator
